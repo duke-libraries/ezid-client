@@ -93,6 +93,31 @@ Experimental -- see `Ezid::Identifier`.
 
 See `Ezid::Metadata`.
 
+## Authentication
+
+Credentials can be provided in three ways:
+
+- Environment variables `EZID_USER` and `EZID_PASSWORD`;
+
+- Client configuration:
+
+```ruby
+Ezid::Client.configure do |config|
+  config.user = "eziduser"
+  config.password = "ezidpass"
+end
+```
+
+- At client initialization:
+
+```ruby
+client = Ezid::Client.new(user: "eziduser", password: "ezidpass")
+```
+
+## Running the tests
+
+By default the tests authenticate as user "apitest"; the password is not provided -- see http://ezid.cdlib.org/doc/apidoc.html#testing-the-api.
+
 ## Contributing
 
 1. Fork it ( https://github.com/[my-github-username]/ezid-client/fork )
