@@ -16,51 +16,78 @@ Or install it yourself as:
 
     $ gem install ezid-client
 
-## Usage
+## Basic Usage
 
-Create a client
+See `Ezid::Client` class for details.
 
-```ruby
->> client = Ezid::Client.new(user: "apitest", password: "********")
-=> #<Ezid::Client:0x007f857c23ca40 @user="apitest", @password="********", @session=#<Ezid::Session:0x007f857c2515a8 @cookie="sessionid=quyclw5bbnwsay0qh05isalt86xj5o1l">>
+**Create a client**
+
+```
+>> client = Ezid::Client.new(user: "apitest")
+=> #<Ezid::Client:0x007f8ce651a890 , @user="apitest", @password="********">
+```
+
+Initialize with a block (wraps in a session)
+
+```
+>> Ezid::Client.new(user: "apitest") do |client|
+?>   client.server_status("*")
+>> end
+I, [2014-11-20T13:23:23.120797 #86059]  INFO -- : success: session cookie returned
+I, [2014-11-20T13:23:25.336596 #86059]  INFO -- : success: EZID is up
+I, [2014-11-20T13:23:25.804790 #86059]  INFO -- : success: authentication credentials flushed
+=> #<Ezid::Client:0x007faa5a6a9ee0 , @user="apitest", @password="********">
+```
+
+**Login**
+
+Note that login is not required to send authenticated requests; it merely establishes a session.  See http://ezid.cdlib.org/doc/apidoc.html#authentication.
+
+```
+>> client.login
+I, [2014-11-20T13:10:50.958378 #85954]  INFO -- : success: session cookie returned
+=> #<Ezid::Client:0x007f8ce651a890 LOGGED_IN, @user="apitest", @password="********">
 ```
 
 Mint an identifier
 
-```ruby
->> response = client.mint_identifier("ark:/99999/fk4")
-=> #<Ezid::Response:0x007f857c488010 @http_response=#<Net::HTTPCreated 201 CREATED readbody=true>, @metadata=#<Ezid::Metadata:0x007f857c488448 @elements={}>, @result="success", @message="ark:/99999/fk4988cc8j">
->> response.identifier
-=> "ark:/99999/fk4988cc8j"
 ```
-
-Modify identifier metadata
-
-```ruby
->> metadata = Ezid::Metadata.new("dc.type" => "Image")
-=> #<Ezid::Metadata:0x007f857c251c88 @elements={"dc.type"=>"Image"}>
->> response = client.modify_identifier("ark:/99999/fk4988cc8j", metadata)
-=> #<Ezid::Response:0x007f857c53ab20 @http_response=#<Net::HTTPOK 200 OK readbody=true>, @metadata=#<Ezid::Metadata:0x007f857c53aa30 @elements={}>, @result="success", @message="ark:/99999/fk4988cc8j">
+>> response = client.mint_identifier("ark:/99999/fk4")
+I, [2014-11-20T13:11:25.894128 #85954]  INFO -- : success: ark:/99999/fk4fn19h87
+=> #<Net::HTTPCreated 201 CREATED readbody=true>
+>> response.identifier
+=> "ark:/99999/fk4fn19h87"
 ```
 
 Get identifier metadata
 
 ```
->> response = client.get_identifier_metadata("ark:/99999/fk4988cc8j")
-=> #<Ezid::Response:0x007f857c50a060 @http_response=#<Net::HTTPOK 200 OK readbody=true>, @metadata=#<Ezid::Metadata:0x007f857c509f48 @elements={"_updated"=>"1416436386", "_target"=>"http://ezid.cdlib.org/id/ark:/99999/fk4988cc8j", "_profile"=>"erc", "dc.type"=>"Image", "_ownergroup"=>"apitest", "_owner"=>"apitest", "_export"=>"yes", "_created"=>"1416436287", "_status"=>"public"}>, @result="success", @message="ark:/99999/fk4988cc8j">
->> response.metadata["dc.type"]
-=> "Image"
+>> response = client.get_identifier_metadata(response.identifier)
+I, [2014-11-20T13:12:08.700287 #85954]  INFO -- : success: ark:/99999/fk4fn19h87
+=> #<Net::HTTPOK 200 OK readbody=true>
 >> puts response.metadata
-_updated: 1416436386
-_target: http://ezid.cdlib.org/id/ark:/99999/fk4988cc8j
+_updated: 1416507086
+_target: http://ezid.cdlib.org/id/ark:/99999/fk4fn19h87
 _profile: erc
-dc.type: Image
 _ownergroup: apitest
 _owner: apitest
 _export: yes
-_created: 1416436287
+_created: 1416507086
 _status: public
+=> nil
 ```
+
+Logout
+
+```
+>> client.logout
+I, [2014-11-20T13:18:47.213566 #86059]  INFO -- : success: authentication credentials flushed
+=> #<Ezid::Client:0x007faa5a712350 , @user="apitest", @password="********">
+```
+
+## Resource-oriented Usage
+
+Experimental -- see `Ezid::Identifier`.
 
 ## Contributing
 
