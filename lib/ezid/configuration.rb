@@ -1,6 +1,12 @@
 require "logger"
 
 module Ezid
+  #
+  # EZID client configuration.
+  #
+  # Use Ezid::Client.configure to set values.
+  #
+  # @api private
   class Configuration
 
     attr_writer :user, :password, :logger
@@ -23,7 +29,7 @@ module Ezid
     end
 
     def logger
-      @logger ||= Logger.new(STDERR)
+      @logger ||= ::Logger.new(STDERR)
     end
 
   end

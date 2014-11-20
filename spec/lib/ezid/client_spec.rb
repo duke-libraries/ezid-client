@@ -29,7 +29,7 @@ module Ezid
         end
       end
     end
-    describe "creating an identifier" do
+    describe "creating an identifier", :vcr do
       # TODO
     end
     describe "minting an identifier", :vcr do
@@ -50,18 +50,26 @@ module Ezid
       end
     end
     describe "getting identifier metadata", :vcr do
-      let(:metadata) { Metadata.new("dc.title" => "Test") }
+      let(:identifier) { subject.mint_identifier(ARK_SHOULDER).identifier }
       it "should return the metadata" do
-        minted = subject.mint_identifier(ARK_SHOULDER, metadata)
-        response = subject.get_identifier_metadata(minted.identifier)
+        response = subject.get_identifier_metadata(identifier)
+        expect(response.body).to match(/_status: public/)
+      end
+    end
+    describe "modifying an identifier", :vcr do
+      let(:identifier) { subject.mint_identifier(ARK_SHOULDER).identifier }
+      before { subject.modify_identifier(identifier, "dc.title" => "Test") }
+      it "should update the metadata" do
+        response = subject.get_identifier_metadata(identifier)
         expect(response.body).to match(/dc.title: Test/)
       end
     end
-    describe "modifying an identifier" do
-      # TODO
-    end
-    describe "deleting an identifier" do
-      # TODO
+    describe "deleting an identifier", :vcr do
+      let(:identifier) { subject.mint_identifier(ARK_SHOULDER, "_status" => "reserved").identifier }
+      before { subject.delete_identifier(identifier) }
+      it "should delete the identifier" do
+        expect { subject.get_identifier_metadata(identifier) }.to raise_error
+      end
     end
     describe "server status", :vcr do
       let(:response) { subject.server_status("*") }

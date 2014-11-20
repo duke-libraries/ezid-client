@@ -1,7 +1,10 @@
 require "delegate"
 
 module Ezid
+  #
   # A response from the EZID service.
+  #
+  # @api private
   class Response < SimpleDelegator
 
     SUCCESS = "success"

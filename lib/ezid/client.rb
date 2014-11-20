@@ -6,8 +6,13 @@ require_relative "metadata"
 require_relative "session"
 require_relative "configuration"
 require_relative "error"
+require_relative "logger"
 
 module Ezid
+  #
+  # EZID client
+  #
+  # @api public
   class Client
 
     class << self
@@ -61,7 +66,7 @@ module Ezid
     end
 
     def logger
-      config.logger
+      @logger ||= Ezid::Logger.new(config.logger)
     end
 
     def login
@@ -92,7 +97,6 @@ module Ezid
     end
 
     def mint_identifier(shoulder, metadata=nil)
-      shoulder ||= config.default_shoulder
       request = Request.build(:mint_identifier, shoulder)
       add_authentication(request)
       add_metadata(request, metadata)
@@ -128,37 +132,15 @@ module Ezid
     # Executes the request
     def execute(request)
       response = request.execute
-      handle_response(response)
-    end
-
-    # Handles the response
-    def handle_response(response)
       raise Error, response.message if response.error?
       response
     ensure
-      log_response(response)
-    end
-
-    # Logs a message for the response
-    def log_response(response)
-      logger.log(log_level(response), log_message(response))
-    end
-
-    # Returns the log level to use for the response
-    def log_level(response)
-      response.error? ? Logger::ERROR : Logger::INFO
-    end
-
-    # Returns the message to log for the response
-    def log_message(response)
-      response.status_line
+      logger.log_response(response)        
     end
 
     # Adds metadata to the request
-    def add_metadata(request, metadata, opts={})
+    def add_metadata(request, metadata)
       metadata = Metadata.new(metadata) # copy/coerce
-      metadata.remove_readonly_elements!
-      metadata.profile = client.default_metadata_profile if opts[:set_profile] && client.default_metadata_profile
       request.body = metadata.to_anvl unless metadata.empty?
     end
 

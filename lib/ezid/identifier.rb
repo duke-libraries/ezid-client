@@ -3,6 +3,10 @@ require "forwardable"
 require_relative "metadata"
 
 module Ezid
+  #
+  # An EZID identifier resource
+  #
+  # @api public 
   class Identifier
     extend Forwardable
 
@@ -90,11 +94,24 @@ module Ezid
       response.message
     end
 
-    # Defines #public!, #reserved!, and #unavailable! instance methods.
-    Metadata::STATUS_VALUES.each do |status|
-      define_method("#{status}!".to_sym) do
-        update(status: status)
-      end
+    def make_public!
+      update(_status: Metadata::PUBLIC)
+    end
+
+    def make_unavailable!
+      update(_status: Metadata::UNAVAILABLE)
+    end
+
+    def public?
+      status == Metadata::PUBLIC
+    end
+
+    def reserved?
+      status == Metadata::RESERVED
+    end
+
+    def unavailable?
+      status == Metadata::UNAVAILABLE
     end
 
     private

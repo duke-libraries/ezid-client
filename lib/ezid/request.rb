@@ -6,6 +6,7 @@ module Ezid
   #
   # A request to the EZID service.
   #
+  # @api private
   class Request < SimpleDelegator
 
     EZID_HOST = "ezid.cdlib.org"

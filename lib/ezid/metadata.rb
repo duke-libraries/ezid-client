@@ -1,6 +1,10 @@
 require "forwardable"
 
 module Ezid
+  #
+  # EZID metadata collection for an identifier
+  #
+  # @api public
   class Metadata
     extend Forwardable
 
@@ -12,24 +16,47 @@ module Ezid
     PROFILES = %w( erc dc datacite crossref )
 
     # EZID identifier status values
-    STATUS_VALUES = %w( public reserved unavailable )
+    PUBLIC = "public"
+    RESERVED = "reserved"
+    UNAVAILABLE = "unavailable"
 
     # EZID Internal metadata elements
     INTERNAL_READONLY_ELEMENTS = %w( _owner _ownergroup _created _updated _shadows _shadowedby _datacenter ).freeze
     INTERNAL_READWRITE_ELEMENTS = %w( _coowners _target _profile _status _export _crossref ).freeze        
     INTERNAL_ELEMENTS = (INTERNAL_READONLY_ELEMENTS + INTERNAL_READWRITE_ELEMENTS).freeze
+
+    DATETIME_ELEMENTS = %w( _created _updated ).freeze
     
     ANVL_SEPARATOR = ": ".freeze
 
-    # Creates a reader method for each internal metadata element
+    # Creates a reader method for each internal metadata element, 
+    # having the same name as the element without the leading underscore
+    #
+    # def created
+    #   self["_created"]
+    # end
+    #
     INTERNAL_ELEMENTS.each do |element|
       reader = element.sub("_", "").to_sym
-      define_method(reader) do
-        self[element]
+
+      if DATETIME_ELEMENTS.include?(element)
+        define_method(reader) do
+          Time.at(self[element])
+        end
+      else
+        define_method(reader) do
+          self[element]
+        end
       end
     end
 
     # Creates a writer method for each writable internal metadata element
+    # having the same base name as the element without the leading underscore.
+    # 
+    # def status=(value)
+    #   self["_status"] = value
+    # end
+    #
     INTERNAL_READWRITE_ELEMENTS.each do |element|
       writer = "#{element.sub('_', '')}=".to_sym
       define_method(writer) do |value|
@@ -53,18 +80,9 @@ module Ezid
       to_anvl
     end
 
-    # Add metadata
+    # Adds metadata to the collection
     def update(data)
       elements.update(coerce(data))
-    end
-
-    # # EZID deletes a metadata element by setting its value to the empty string
-    # def delete(element)
-    #   self[element] = "" if has_element?(element)
-    # end
-
-    def remove_readonly_elements!
-      delete_if { |element, v| INTERNAL_READONLY_ELEMENTS.include?(element) }
     end
 
     private

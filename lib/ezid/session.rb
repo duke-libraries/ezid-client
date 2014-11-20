@@ -4,6 +4,10 @@ require "net/http"
 require_relative "request"
 
 module Ezid
+  #
+  # An EZID session
+  #
+  # @api private
   class Session
 
     attr_reader :cookie
