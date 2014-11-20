@@ -49,7 +49,7 @@ I, [2014-11-20T13:10:50.958378 #85954]  INFO -- : success: session cookie return
 => #<Ezid::Client:0x007f8ce651a890 LOGGED_IN, @user="apitest", @password="********">
 ```
 
-Mint an identifier
+**Mint an identifier**
 
 ```
 >> response = client.mint_identifier("ark:/99999/fk4")
@@ -59,7 +59,7 @@ I, [2014-11-20T13:11:25.894128 #85954]  INFO -- : success: ark:/99999/fk4fn19h87
 => "ark:/99999/fk4fn19h87"
 ```
 
-Get identifier metadata
+**Get identifier metadata**
 
 ```
 >> response = client.get_identifier_metadata(response.identifier)
@@ -77,7 +77,7 @@ _status: public
 => nil
 ```
 
-Logout
+**Logout**
 
 ```
 >> client.logout
