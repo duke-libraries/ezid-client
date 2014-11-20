@@ -5,18 +5,16 @@ module Ezid
     extend Forwardable
 
     attr_reader :elements
-    def_delegators :elements, :[], :[]=, :empty?, :to_h, :to_a
+    def_delegators :elements, :[], :[]=, :empty?, :to_h, :to_a, :delete_if
+    def_delegator :elements, :key?, :has_element?
 
-    ERC_PROFILE = "erc"
-    DC_PROFILE = "dc"
-    DATACITE_PROFILE = "datacite"
-    CROSSREF_PROFILE = "crossref"
+    # EZID metadata profiles
+    PROFILES = %w( erc dc datacite crossref )
 
-    STATUS_PUBLIC = "public"
-    STATUS_RESERVED = "reserved"
-    STATUS_UNAVAILABLE = "unavailable"
+    # EZID identifier status values
+    STATUS_VALUES = %w( public reserved unavailable )
 
-    # Internal metadata elements
+    # EZID Internal metadata elements
     INTERNAL_READONLY_ELEMENTS = %w( _owner _ownergroup _created _updated _shadows _shadowedby _datacenter ).freeze
     INTERNAL_READWRITE_ELEMENTS = %w( _coowners _target _profile _status _export _crossref ).freeze        
     INTERNAL_ELEMENTS = (INTERNAL_READONLY_ELEMENTS + INTERNAL_READWRITE_ELEMENTS).freeze
@@ -47,7 +45,7 @@ module Ezid
     # @todo escape \n, \r and %
     # @todo force UTF-8
     # @see http://ezid.cdlib.org/doc/apidoc.html#request-response-bodies
-    def to_anvl
+    def to_anvl(exclude_readonly = false)      
       to_a.map { |pair| pair.join(ANVL_SEPARATOR) }.join("\n")
     end
 
@@ -58,6 +56,15 @@ module Ezid
     # Add metadata
     def update(data)
       elements.update(coerce(data))
+    end
+
+    # # EZID deletes a metadata element by setting its value to the empty string
+    # def delete(element)
+    #   self[element] = "" if has_element?(element)
+    # end
+
+    def remove_readonly_elements!
+      delete_if { |element, v| INTERNAL_READONLY_ELEMENTS.include?(element) }
     end
 
     private

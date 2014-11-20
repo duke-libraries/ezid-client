@@ -24,15 +24,20 @@ module Ezid
     end
 
     def metadata
-      content.last if success? && identifier_uri?
+      return @metadata if @metadata
+      if success? && identifier_uri?
+        @metadata = Metadata.new(content.last) 
+      end
+      @metadata
     end
 
     def identifier
-      message.split(/\s/).first if success? && identifier_uri?
+      message.split(/\s/).first if success? # && identifier_uri?
     end
 
+    # FIXME ?
     def identifier_uri?
-      uri.path =~ /^\/(id|shoulder)\//
+      ( uri.path =~ /^\/(id|shoulder)\// ) && true
     end
 
     def outcome

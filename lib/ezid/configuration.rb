@@ -4,7 +4,15 @@ module Ezid
   class Configuration
 
     attr_writer :user, :password, :logger
-    attr_accessor :metadata_profile, :default_status
+
+    # Default metadata profile (recommended)
+    attr_accessor :default_metadata_profile
+
+    # Default status - set only if default should not "public" (EZID default)
+    attr_accessor :default_status
+
+    # Default shoulder for minting (recommended)
+    attr_accessor :default_shoulder
 
     def user
       @user ||= ENV["EZID_USER"]

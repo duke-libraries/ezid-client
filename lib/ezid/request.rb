@@ -2,9 +2,6 @@ require "uri"
 require "net/http"
 require "delegate"
 
-require_relative "api"
-require_relative "response"
-
 module Ezid
   #
   # A request to the EZID service.

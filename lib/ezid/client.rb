@@ -1,5 +1,8 @@
+require_relative "api"
 require_relative "identifier"
 require_relative "request"
+require_relative "response"
+require_relative "metadata"
 require_relative "session"
 require_relative "configuration"
 require_relative "error"
@@ -89,6 +92,7 @@ module Ezid
     end
 
     def mint_identifier(shoulder, metadata=nil)
+      shoulder ||= config.default_shoulder
       request = Request.build(:mint_identifier, shoulder)
       add_authentication(request)
       add_metadata(request, metadata)
@@ -96,7 +100,6 @@ module Ezid
     end
     
     def modify_identifier(identifier, metadata)
-      raise ArgumentError, "Metadata is required" if metadata.nil? || metadata.empty?
       request = Request.build(:modify_identifier, identifier)
       add_authentication(request)
       add_metadata(request, metadata)
@@ -152,8 +155,11 @@ module Ezid
     end
 
     # Adds metadata to the request
-    def add_metadata(request, metadata)
-      request.body = metadata.to_anvl unless metadata.nil? || metadata.empty?
+    def add_metadata(request, metadata, opts={})
+      metadata = Metadata.new(metadata) # copy/coerce
+      metadata.remove_readonly_elements!
+      metadata.profile = client.default_metadata_profile if opts[:set_profile] && client.default_metadata_profile
+      request.body = metadata.to_anvl unless metadata.empty?
     end
 
     # Adds authentication to the request
