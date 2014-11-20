@@ -95,9 +95,9 @@ See `Ezid::Metadata`.
 
 ## Authentication
 
-Credentials can be provided in three ways:
+Credentials can be provided in any -- or a combination -- of these ways:
 
-- Environment variables `EZID_USER` and `EZID_PASSWORD`;
+- Environment variables `EZID_USER` and/or `EZID_PASSWORD`;
 
 - Client configuration:
 
