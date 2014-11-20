@@ -89,6 +89,10 @@ I, [2014-11-20T13:18:47.213566 #86059]  INFO -- : success: authentication creden
 
 Experimental -- see `Ezid::Identifier`.
 
+## Metadata handling
+
+See `Ezid::Metadata`.
+
 ## Contributing
 
 1. Fork it ( https://github.com/[my-github-username]/ezid-client/fork )
