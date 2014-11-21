@@ -49,31 +49,38 @@ module Ezid
         end
       end
     end
-    describe "getting identifier metadata", :vcr do
-      let(:identifier) { subject.mint_identifier(ARK_SHOULDER).identifier }
+    describe "getting identifier metadata" do
+      before do
+        @identifier = subject.mint_identifier(ARK_SHOULDER).identifier
+      end
       it "should return the metadata" do
-        response = subject.get_identifier_metadata(identifier)
+        response = subject.get_identifier_metadata(@identifier)
         expect(response.body).to match(/_status: public/)
       end
     end
-    describe "modifying an identifier", :vcr do
-      let(:identifier) { subject.mint_identifier(ARK_SHOULDER).identifier }
-      before { subject.modify_identifier(identifier, "dc.title" => "Test") }
+    describe "modifying an identifier" do
+      before do
+        @identifier = subject.mint_identifier(ARK_SHOULDER).identifier
+      end
       it "should update the metadata" do
-        response = subject.get_identifier_metadata(identifier)
+        subject.modify_identifier(@identifier, "dc.title" => "Test")
+        response = subject.get_identifier_metadata(@identifier)
         expect(response.body).to match(/dc.title: Test/)
       end
     end
-    describe "deleting an identifier", :vcr do
-      let(:identifier) { subject.mint_identifier(ARK_SHOULDER, "_status" => "reserved").identifier }
-      before { subject.delete_identifier(identifier) }
+    describe "deleting an identifier" do
+      before do
+        @identifier = subject.mint_identifier(ARK_SHOULDER, "_status" => "reserved").identifier 
+      end
       it "should delete the identifier" do
-        expect { subject.get_identifier_metadata(identifier) }.to raise_error
+        response = subject.delete_identifier(@identifier) 
+        expect(response).to be_success
+        expect { subject.get_identifier_metadata(@identifier) }.to raise_error
       end
     end
     describe "server status", :vcr do
-      let(:response) { subject.server_status("*") }
       it "should report the status of EZID and subsystems" do
+        response =  subject.server_status("*")
         expect(response).to be_success
         expect(response.message).to eq("EZID is up")
       end

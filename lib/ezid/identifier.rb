@@ -4,7 +4,9 @@ require_relative "metadata"
 
 module Ezid
   #
-  # An EZID identifier resource
+  # An EZID identifier resource.
+  #
+  # Identifier objects are instantiated by the class methods `create', `mint' and `find'.
   #
   # @api public 
   class Identifier
@@ -14,27 +16,29 @@ module Ezid
 
     def_delegators :metadata, :status
 
+    private_class_method :new
+
     class << self
+      # Creates and EZID identifier
       def create(id, metadata=nil)
         response = Client.create_identifier(id, metadata)
-        Identifier.new(response.identifier)
+        new(response.identifier)
       end
 
       # Mints an EZID identifier
       def mint(shoulder=nil, metadata=nil)
         response = Client.mint_identifier(metadata)
-        identifier = Identifier.new(response.identifier)
+        identifier = new(response.identifier)
       end
 
       # Find an EZID indentifier
       def find(id)
         response = Client.get_identifier_metadata(id)
-        Identifier.new(response.identifier, response.metadata)
+        new(response.identifier, response.metadata)
       end
     end
 
     def initialize(id, metadata=nil)
-      raise Error, "Cannot initialize an Identifier without an id; use Identifier.mint." if id.nil?
       @id = id
       @metadata = Metadata.new(metadata)
     end

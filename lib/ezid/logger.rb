@@ -8,23 +8,24 @@ module Ezid
   # @api private
   class Logger < SimpleDelegator
 
-    # Logs a message for an EZID response
+    # Logs a message for an EZID request/response
+    # @param request [Ezid::Request] the request
     # @param response [Ezid::Response] the response
-    def log_response(response)
-      log(log_level(response), log_message(response))
+    def request_and_response(request, response)
+      level = response.error? ? ::Logger::ERROR : ::Logger::INFO
+      response_message = response.status_line
+      message = "EZID #{request_message(request)}: #{response_message}"
+      log(level, message)
     end
 
-    # Returns the log level to use for an EZID response
-    # @param response [Ezid::Response] the response
-    def log_level(response)
-      response.error? ? ::Logger::ERROR : ::Logger::INFO
-    end
+    private
 
-    # Returns the message to log for tan EZID response
-    # @param response [Ezid::Response] the response
-    def log_message(response)
-      "[EZID] #{response.status_line}"
-    end    
+    def request_message(request)
+      message = request.operation[0].to_s
+      args = request.operation[1..-1]
+      message << "(#{args.join(', ')})" if args.any?
+      message
+    end
 
   end
 end
