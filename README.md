@@ -118,6 +118,8 @@ client = Ezid::Client.new(user: "eziduser", password: "ezidpass")
 
 By default the tests authenticate as user "apitest"; the password is not provided -- see http://ezid.cdlib.org/doc/apidoc.html#testing-the-api.
 
+The test suite uses [VCR](https://relishapp.com/vcr/vcr) and [WebMock](https://github.com/bblimke/webmock) to stub requests and responses after the first run.  The VCR "cassettes" are written to `spec/cassettes` and may be cleared with the rake task `test:clean`.
+
 ## Contributing
 
 1. Fork it ( https://github.com/[my-github-username]/ezid-client/fork )
