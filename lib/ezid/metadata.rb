@@ -12,7 +12,7 @@ module Ezid
     # The metadata elements hash
     attr_reader :elements
 
-    def_delegators :elements, :each, :empty?, :[], :[]=
+    def_delegators :elements, :each, :keys, :values, :empty?, :[], :[]=
 
     # EZID metadata profiles
     PROFILES = %w( erc dc datacite crossref )
@@ -45,8 +45,10 @@ module Ezid
     # EZID metadata field/value separator
     ANVL_SEPARATOR = ": "
 
-    # Characters to escape on output to EZID
-    ESCAPE_RE = /[%:\r\n]/
+    # Characters to escape in element values on output to EZID
+    ESCAPE_VALUES_RE = /[%\r\n]/
+
+    ESCAPE_KEYS_RE = /[%:\r\n]/
 
     # Character sequence to unescape from EZID
     UNESCAPE_RE = /%\h\h/
@@ -68,7 +70,7 @@ module Ezid
     # @see http://ezid.cdlib.org/doc/apidoc.html#request-response-bodies
     # @return [String] the ANVL output
     def to_anvl
-      lines = map { |element| element.map { |e| escape(e) }.join(ANVL_SEPARATOR) }
+      lines = escape_keys.zip(escape_values).map { |e| e.join(ANVL_SEPARATOR) }
       lines.join("\n").force_encoding(Encoding::UTF_8)
     end
 
@@ -120,12 +122,21 @@ module Ezid
       hsh.keys.map(&:to_s).zip(hsh.values).to_h
     end
 
+    def escape_keys
+      keys.map { |k| escape(ESCAPE_KEYS_RE, k) }
+    end
+
+    def escape_values
+      values.map { |v| escape(ESCAPE_VALUES_RE, v) }
+    end
+
     # Escape value for sending to EZID host
     # @see http://ezid.cdlib.org/doc/apidoc.html#request-response-bodies
+    # @param re [Regexp] the regular expression to match for escaping
     # @param value [String] the value to escape
     # @return [String] the escaped value
-    def escape(value)
-      value.gsub(ESCAPE_RE) { |m| URI.encode(m) }
+    def escape(re, value)
+      value.gsub(re) { |m| URI.encode_www_form_component(m) }
     end
 
     # Unescape value from EZID host (or other source)
@@ -133,7 +144,7 @@ module Ezid
     # @param value [String] the value to unescape
     # @return [String] the unescaped value
     def unescape(value)
-      value.gsub(UNESCAPE_RE) { |m| URI.decode(m) }
+      value.gsub(UNESCAPE_RE) { |m| URI.decode_www_form_component(m) }
     end
     
     # Coerce a string of metadata (e.g., from EZID host) into a Hash
