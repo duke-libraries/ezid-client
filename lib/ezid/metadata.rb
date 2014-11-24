@@ -37,10 +37,6 @@ module Ezid
 
     # EZID internal metadata elements
     INTERNAL_ELEMENTS = (INTERNAL_READONLY_ELEMENTS + INTERNAL_READWRITE_ELEMENTS).freeze
-
-    # Internal metadata element which are datetime values
-    # @note EZID outputs datetime info as epoch seconds.
-    DATETIME_ELEMENTS = %w( _created _updated ).freeze
     
     # EZID metadata field/value separator
     ANVL_SEPARATOR = ": "
@@ -70,8 +66,7 @@ module Ezid
     # @see http://ezid.cdlib.org/doc/apidoc.html#request-response-bodies
     # @return [String] the ANVL output
     def to_anvl
-      lines = escape_keys.zip(escape_values).map { |e| e.join(ANVL_SEPARATOR) }
-      lines.join("\n").force_encoding(Encoding::UTF_8)
+      escape_keys.zip(escape_values).map { |e| e.join(ANVL_SEPARATOR) }.join("\n")
     end
 
     def to_s
@@ -86,23 +81,45 @@ module Ezid
       self
     end
 
-    # method_missing is used to provide internal element readers and writers
-    def method_missing(name, *args)
-      if INTERNAL_ELEMENTS.include?(element = "_#{name}")
-        reader(element) 
-      elsif name.to_s.end_with?("=") && INTERNAL_READWRITE_ELEMENTS.include?(element = "_#{name}".sub("=", ""))
-        writer(element, args.first) 
-      else
-        super
-      end
+    # Identifier status
+    # @return [String] the status
+    def status
+      reader("_status")
+    end
+
+    # The time the identifier was created
+    # @return [Time] the time
+    def created
+      value = reader("_created")
+      return Time.at(value.to_i) if value
+      value
+    end
+
+    # The time the identifier was last updated
+    # @return [Time] the time
+    def updated
+      value = reader("_updated")
+      return Time.at(value.to_i) if value
+      value
+    end
+
+    # The identifier's preferred metadata profile
+    # @see http://ezid.cdlib.org/doc/apidoc.html#metadata-profiles
+    # @return [String] the profile
+    def profile
+      reader("_profile")
+    end
+
+    # The identifier's target URL
+    # @return [String] the URL
+    def target
+      reader("_target")
     end
 
     private
 
     def reader(element)
-      value = self[element]
-      return Time.at(value.to_i) if DATETIME_ELEMENTS.include?(element) && !value.nil?
-      value
+      self[element]
     end
 
     def writer(element, value)
@@ -136,7 +153,7 @@ module Ezid
     # @param value [String] the value to escape
     # @return [String] the escaped value
     def escape(re, value)
-      value.gsub(re) { |m| URI.encode_www_form_component(m) }
+      value.gsub(re) { |m| URI.encode_www_form_component(m, Encoding::UTF_8) }
     end
 
     # Unescape value from EZID host (or other source)
