@@ -85,10 +85,6 @@ I, [2014-11-20T13:18:47.213566 #86059]  INFO -- : success: authentication creden
 => #<Ezid::Client:0x007faa5a712350 , @user="apitest", @password="********">
 ```
 
-## Resource-oriented Usage
-
-Experimental -- see `Ezid::Identifier`.
-
 ## Metadata handling
 
 See `Ezid::Metadata`.
