@@ -1,5 +1,4 @@
 require_relative "api"
-require_relative "identifier"
 require_relative "request"
 require_relative "response"
 require_relative "metadata"
