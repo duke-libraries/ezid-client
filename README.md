@@ -16,73 +16,52 @@ Or install it yourself as:
 
     $ gem install ezid-client
 
-## Basic Usage
+## Resource-oriented Usage (CRUD)
 
-See `Ezid::Client` class for details.
+Create (Mint)
 
-**Create a client**
-
-```
->> client = Ezid::Client.new(user: "apitest")
-=> #<Ezid::Client:0x007f8ce651a890 , @user="apitest", @password="********">
-```
-
-Initialize with a block (wraps in a session)
-
-```
->> Ezid::Client.new(user: "apitest") do |client|
-?>   client.server_status("*")
->> end
-I, [2014-11-20T13:23:23.120797 #86059]  INFO -- : success: session cookie returned
-I, [2014-11-20T13:23:25.336596 #86059]  INFO -- : success: EZID is up
-I, [2014-11-20T13:23:25.804790 #86059]  INFO -- : success: authentication credentials flushed
-=> #<Ezid::Client:0x007faa5a6a9ee0 , @user="apitest", @password="********">
+```ruby
+>> identifier = Ezid::Identifier.create(shoulder: "ark:/99999/fk4")
+I, [2014-12-04T15:06:02.428445 #86655]  INFO -- : EZID MINT ark:/99999/fk4 -- success: ark:/99999/fk4rx9d523
+I, [2014-12-04T15:06:03.249793 #86655]  INFO -- : EZID GET ark:/99999/fk4rx9d523 -- success: ark:/99999/fk4rx9d523
+=> #<Ezid::Identifier id="ark:/99999/fk4rx9d523" status="public" target="http://ezid.cdlib.org/id/ark:/99999/fk4rx9d523" created="2014-12-04 20:06:02 UTC">
+>> identifier.id
+=> "ark:/99999/fk4rx9d523"
+>> identifier.status
+=> "public"
+>> identifier.target
+=> "http://ezid.cdlib.org/id/ark:/99999/fk4rx9d523"
 ```
 
-**Login**
+Retrieve (Get)
 
-Note that login is not required to send authenticated requests; it merely establishes a session.  See http://ezid.cdlib.org/doc/apidoc.html#authentication.
-
-```
->> client.login
-I, [2014-11-20T13:10:50.958378 #85954]  INFO -- : success: session cookie returned
-=> #<Ezid::Client:0x007f8ce651a890 LOGGED_IN, @user="apitest", @password="********">
+```ruby
+>> identifier = Ezid::Identifier.find("ark:/99999/fk4rx9d523")
+I, [2014-12-04T15:07:00.648676 #86655]  INFO -- : EZID GET ark:/99999/fk4rx9d523 -- success: ark:/99999/fk4rx9d523
+=> #<Ezid::Identifier id="ark:/99999/fk4rx9d523" status="public" target="http://ezid.cdlib.org/id/ark:/99999/fk4rx9d523" created="2014-12-04 20:06:02 UTC">
 ```
 
-**Mint an identifier**
+Update (Modify)
 
-```
->> response = client.mint_identifier("ark:/99999/fk4")
-I, [2014-11-20T13:11:25.894128 #85954]  INFO -- : success: ark:/99999/fk4fn19h87
-=> #<Net::HTTPCreated 201 CREATED readbody=true>
->> response.identifier
-=> "ark:/99999/fk4fn19h87"
-```
-
-**Get identifier metadata**
-
-```
->> response = client.get_identifier_metadata(response.identifier)
-I, [2014-11-20T13:12:08.700287 #85954]  INFO -- : success: ark:/99999/fk4fn19h87
-=> #<Net::HTTPOK 200 OK readbody=true>
->> puts response.metadata
-_updated: 1416507086
-_target: http://ezid.cdlib.org/id/ark:/99999/fk4fn19h87
-_profile: erc
-_ownergroup: apitest
-_owner: apitest
-_export: yes
-_created: 1416507086
-_status: public
-=> nil
+```ruby
+>> identifier.target = "http://example.com"
+=> "http://example.com"
+>> identifier.save
+I, [2014-12-04T15:11:57.263906 #86734]  INFO -- : EZID MODIFY ark:/99999/fk4rx9d523 -- success: ark:/99999/fk4rx9d523
+I, [2014-12-04T15:11:58.099128 #86734]  INFO -- : EZID GET ark:/99999/fk4rx9d523 -- success: ark:/99999/fk4rx9d523
+=> #<Ezid::Identifier id="ark:/99999/fk4rx9d523" status="public" target="http://example.com" created="2014-12-04 20:06:02 UTC">
 ```
 
-**Logout**
+Delete
 
-```
->> client.logout
-I, [2014-11-20T13:18:47.213566 #86059]  INFO -- : success: authentication credentials flushed
-=> #<Ezid::Client:0x007faa5a712350 , @user="apitest", @password="********">
+```ruby
+>> identifier = Ezid::Identifier.create(shoulder: "ark:/99999/fk4", status: "reserved")
+I, [2014-12-04T15:12:39.976930 #86734]  INFO -- : EZID MINT ark:/99999/fk4 -- success: ark:/99999/fk4n58pc0r
+I, [2014-12-04T15:12:40.693256 #86734]  INFO -- : EZID GET ark:/99999/fk4n58pc0r -- success: ark:/99999/fk4n58pc0r
+=> #<Ezid::Identifier id="ark:/99999/fk4n58pc0r" status="reserved" target="http://ezid.cdlib.org/id/ark:/99999/fk4n58pc0r" created="2014-12-04 20:12:39 UTC">
+>> identifier.delete
+I, [2014-12-04T15:12:48.853964 #86734]  INFO -- : EZID DELETE ark:/99999/fk4n58pc0r -- success: ark:/99999/fk4n58pc0r
+=> #<Ezid::Identifier id="ark:/99999/fk4n58pc0r" DELETED>
 ```
 
 ## Metadata handling
@@ -104,7 +83,7 @@ Ezid::Client.configure do |config|
 end
 ```
 
-- At client initialization:
+- At client initialization (only if using Ezid::Client explicity):
 
 ```ruby
 client = Ezid::Client.new(user: "eziduser", password: "ezidpass")
@@ -112,9 +91,9 @@ client = Ezid::Client.new(user: "eziduser", password: "ezidpass")
 
 ## Running the tests
 
-By default the tests authenticate as user "apitest"; the password is not provided -- see http://ezid.cdlib.org/doc/apidoc.html#testing-the-api.
+See http://ezid.cdlib.org/doc/apidoc.html#testing-the-api.
 
-The test suite uses [VCR](https://relishapp.com/vcr/vcr) and [WebMock](https://github.com/bblimke/webmock) to stub requests and responses after the first run.  The VCR "cassettes" are written to `spec/cassettes` and may be cleared with the rake task `test:clean`.
+Integration tests have been tagged `type: :feature`.  In order to run those tests successfully, you must supply the password for the test account "apitest" (contact EZID).  You can exclude the integration tests with the RSpec option `--tag ~type:feature`.
 
 ## Contributing
 

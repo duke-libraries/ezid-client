@@ -1,8 +1,3 @@
-require "uri"
-require "net/http"
-
-require_relative "request"
-
 module Ezid
   #
   # An EZID session
@@ -20,9 +15,8 @@ module Ezid
       super.sub(/@cookie="[^\"]+"/, "OPEN")
     end
 
-    def open(response)
-      # XXX raise exception if no cookie?
-      @cookie = response.cookie if response.cookie
+    def open(cookie)
+      @cookie = cookie
     end
 
     def close

@@ -1,11 +1,11 @@
-require_relative "api"
+require_relative "configuration"
 require_relative "request"
 require_relative "response"
-require_relative "metadata"
 require_relative "session"
-require_relative "configuration"
+require_relative "metadata"
+require_relative "identifier"
 require_relative "error"
-require_relative "logger"
+require_relative "status"
 
 module Ezid
   #
@@ -25,33 +25,9 @@ module Ezid
       def configure
         yield config
       end
-
-      # Creates an new identifier
-      # @see #create_identifier
-      def create_identifier(*args)
-        Client.new.create_identifier(*args)
-      end
-
-      # Mints a new identifier
-      # @see #mint_identifier
-      def mint_identifier(*args)
-        Client.new.mint_identifier(*args)
-      end
-      
-      # Retrieve the metadata for an identifier
-      # @see #get_identifier_metadata
-      def get_identifier_metadata(*args)
-        Client.new.get_identifier_metadata(*args)
-      end
-
-      # Logs into EZID
-      # @see #login
-      def login
-        Client.new.login
-      end
     end    
 
-    attr_reader :session, :user, :password
+    attr_reader :session, :user, :password # , :host
 
     def initialize(opts = {})
       @session = Session.new
@@ -65,10 +41,7 @@ module Ezid
     end
 
     def inspect
-      out = super
-      out.sub!(/@password="[^\"]+"/, "@password=\"********\"")
-      out.sub!(/@session=#<[^>]+>/, logged_in? ? "LOGGED_IN" : "")
-      out
+      "#<#{self.class.name} user=\"#{user}\" session=#{logged_in? ? 'OPEN' : 'CLOSED'}>"
     end
 
     # The client configuration
@@ -78,18 +51,23 @@ module Ezid
     end
 
     # The client logger
-    # @return [Ezid::Logger] the logger
+    # @return [Logger] the logger
     def logger
-      @logger ||= Ezid::Logger.new(config.logger)
+      @logger ||= config.logger
     end
 
     # Open a session
+    # @raise [Ezid::Error]
     # @return [Ezid::Client] the client
     def login
       if logged_in?
         logger.info("Already logged in, skipping login request.")
       else
-        do_login
+        response = Request.execute(:Get, "/login") do |request|
+          add_authentication(request)
+        end
+        handle_response(response, "LOGIN")
+        session.open(response.cookie)
       end
       self
     end
@@ -98,7 +76,9 @@ module Ezid
     # @return [Ezid::Client] the client
     def logout
       if logged_in?
-        do_logout
+        response = Request.execute(:Get, "/logout")
+        handle_response(response, "LOGOUT")
+        session.close
       else
         logger.info("Not logged in, skipping logout request.")
       end
@@ -112,104 +92,94 @@ module Ezid
 
     # @param identifier [String] the identifier string to create
     # @param metadata [String, Hash, Ezid::Metadata] optional metadata to set
+    # @raise [Ezid::Error]
     # @return [Ezid::Response] the response
     def create_identifier(identifier, metadata=nil)
-      request = Request.new(:create_identifier, identifier)
-      add_authentication(request)
-      add_metadata(request, metadata)
-      execute(request)
+      response = Request.execute(:Put, "/id/#{identifier}") do |request|
+        add_authentication(request)
+        add_metadata(request, metadata)
+      end
+      handle_response(response, "CREATE #{identifier}")
     end
 
     # @param shoulder [String] the shoulder on which to mint a new identifier
     # @param metadata [String, Hash, Ezid::Metadata] metadata to set
+    # @raise [Ezid::Error]
     # @return [Ezid::Response] the response
     def mint_identifier(shoulder, metadata=nil)
-      request = Request.new(:mint_identifier, shoulder)
-      add_authentication(request)
-      add_metadata(request, metadata)
-      execute(request)
+      raise Error, "Shoulder missing -- cannot mint identifier." unless shoulder
+      response = Request.execute(:Post, "/shoulder/#{shoulder}") do |request|
+        add_authentication(request)
+        add_metadata(request, metadata)
+      end
+      handle_response(response, "MINT #{shoulder}")
     end
     
     # @param identifier [String] the identifier to modify
     # @param metadata [String, Hash, Ezid::Metadata] metadata to set
+    # @raise [Ezid::Error]
     # @return [Ezid::Response] the response
     def modify_identifier(identifier, metadata)
-      request = Request.new(:modify_identifier, identifier)
-      add_authentication(request)
-      add_metadata(request, metadata)
-      execute(request)
+      response = Request.execute(:Post, "/id/#{identifier}") do |request|
+        add_authentication(request)
+        add_metadata(request, metadata)
+      end
+      handle_response(response, "MODIFY #{identifier}")
     end
 
     # @param identifier [String] the identifier to retrieve
+    # @raise [Ezid::Error]
     # @return [Ezid::Response] the response
     def get_identifier_metadata(identifier)
-      request = Request.new(:get_identifier_metadata, identifier)
-      add_authentication(request)
-      execute(request)
+      response = Request.execute(:Get, "/id/#{identifier}") do |request|
+        add_authentication(request)
+      end
+      handle_response(response, "GET #{identifier}")
     end
 
     # @param identifier [String] the identifier to delete
+    # @raise [Ezid::Error]
     # @return [Ezid::Response] the response
     def delete_identifier(identifier)
-      request = Request.new(:delete_identifier, identifier)
-      add_authentication(request)
-      execute(request)
+      response = Request.execute(:Delete, "/id/#{identifier}") do |request|
+        add_authentication(request)
+      end
+      handle_response(response, "DELETE #{identifier}")
     end
 
     # @param subsystems [Array]
-    # @return [Ezid::Response] the response
+    # @raise [Ezid::Error]
+    # @return [Ezid::Status] the status response
     def server_status(*subsystems)
-      request = Request.new(:server_status, *subsystems)
-      execute(request)
+      response = Request.execute(:Get, "/status?subsystems=#{subsystems.join(',')}")
+      handle_response(Status.new(response), "STATUS")
     end
 
     private
 
-    def build_request(*args)
-      request = Request.new(*args)
-    end
-
-    # Executes the request
-    # @param request [Ezid::Request] the request
-    # @raise [Ezid::Error] if the response status indicates an error
-    # @return [Ezid::Response] the response
-    def execute(request)
-      response = Response.new(request.execute)
-      logger.request_and_response(request, response)
-      raise Error, response.message if response.error?
-      response
-    end
-
-    # Adds metadata to the request
-    def add_metadata(request, metadata)
-      return if metadata.nil? || metadata.empty?
-      metadata = Metadata.new(metadata) # copy/coerce
-      request.add_metadata(metadata) 
-    end
-
-    # Adds authentication to the request
-    def add_authentication(request)
-      if session.open?
-        request.add_authentication(cookie: session.cookie)
-      else
-        request.add_authentication(user: user, password: password)
+      # Adds authentication data to the request
+      def add_authentication(request)
+        if session.open?
+          request["Cookie"] = session.cookie
+        else
+          request.basic_auth(user, password)
+        end
       end
-    end
 
-    # Does the login
-    def do_login
-      request = Request.new(:login)
-      add_authentication(request)
-      response = execute(request)
-      session.open(response)
-    end
+      # Adds EZID metadata (if any) to the request body
+      def add_metadata(request, metadata)
+        return if metadata.nil? || metadata.empty?
+        metadata = Metadata.new(metadata) unless metadata.is_a?(Metadata)
+        request.body = metadata.to_anvl(false) 
+      end
 
-    # Does the logoug
-    def do_logout
-      request = Request.new(:logout)
-      execute(request)
-      session.close
-    end
+      def handle_response(response, request_info)
+        log_level = response.error? ? Logger::ERROR : Logger::INFO
+        message = "EZID #{request_info} -- #{response.status_line}"
+        logger.log(log_level, message)
+        raise response.exception if response.exception
+        response
+      end
 
   end
 end

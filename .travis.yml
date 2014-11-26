@@ -1,0 +1,10 @@
+language: ruby
+rvm:
+  - 2.1
+  - 2.0.0
+cache: 
+  - bundler
+env: SPEC_OPTS="--tag ~type:feature"
+notifications:
+  email:
+    - lib-drs@duke.edu
