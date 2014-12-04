@@ -4,7 +4,6 @@ module Ezid
   #
   # A response from the EZID service.
   #
-  # @note A Response should only be created by an Ezid::Client instance.
   # @api private
   class Response < SimpleDelegator
 
@@ -13,6 +12,21 @@ module Ezid
 
     # Error response status
     ERROR = "error"
+
+    IDENTIFIER_RE = /^(doi|ark|urn):[^\s]+/
+    SHADOW_ARK_RE = /\| (ark:[^\s]+)/
+
+    def id
+      @id ||= IDENTIFIER_RE.match(message)[0]
+    end
+
+    def shadow_ark
+      @shadow_ark ||= SHADOW_ARK_RE.match(message)[1]
+    end
+
+    def metadata
+      content[1]
+    end
 
     # The response status -- "success" or "error"
     # @return [String] the status
@@ -23,7 +37,7 @@ module Ezid
     # The status line of the response
     # @return [String] the status line
     def status_line
-      content.first
+      content[0]
     end
 
     # The body of the response split into: status line and rest of body
@@ -32,44 +46,44 @@ module Ezid
       @content ||= body.split(/\r?\n/, 2)
     end
 
-    # Metadata (if any) parsed out of the response
-    # @return [Ezid::Metadata] the metadata
-    def metadata
-      return @metadata if @metadata
-      if success? && identifier_uri?
-        @metadata = Metadata.new(content.last) 
-      end
-      @metadata
-    end
-
-    # The identifier string parsed out of the response
-    # @return [String] the identifier
-    def identifier
-      message.split(/\s/).first if success? && identifier_uri?
-    end
-
-    def identifier_uri?
-      ( uri.path =~ /^\/(id|shoulder)\// ) && true
-    end
-
+    # The outcome of the request - "success" or "error"
+    # @return [String] the outcome
     def outcome
       status.first
     end
 
+    # The EZID status message
+    # @return [String] the message
     def message
       status.last
     end
 
-    def cookie
-      self["Set-Cookie"].split(";").first rescue nil
-    end
-
+    # Whether the outcome was an error
+    # @return [Boolean]
     def error?
       outcome == ERROR
     end
 
+    # Whether the outcome was a success
+    # @return [Boolean]
     def success?
       outcome == SUCCESS
+    end
+
+    # Returns an exception instance if there was an error
+    # @return [Ezid::Error] the exception
+    def exception
+      @exception ||= (error? && Error.new(message))
+    end
+
+    # The URI path of the request
+    # @return [String] the path
+    def uri_path
+      __getobj__.uri.path
+    end
+
+    def cookie
+      self["Set-Cookie"].split(";").first rescue nil
     end
 
   end

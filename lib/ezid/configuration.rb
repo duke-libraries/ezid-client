@@ -9,28 +9,43 @@ module Ezid
   # @api private
   class Configuration
 
-    attr_writer :user, :password, :logger
+    # EZID user name
+    #   Default: value of EZID_USER environment variable
+    attr_accessor :user
 
-    # Default metadata profile (recommended)
-    attr_accessor :default_metadata_profile
+    # EZID password
+    #   Default: value of EZID_PASSWORD environment variable
+    attr_accessor :password
+
+    # Ruby logger instance
+    #   Default device: STDERR
+    attr_writer :logger
+
+    # Default metadata profile
+    # attr_accessor :default_metadata_profile
 
     # Default status - set only if default should not "public" (EZID default)
-    attr_accessor :default_status
+    # attr_accessor :default_status
 
-    # Default shoulder for minting (recommended)
-    attr_accessor :default_shoulder
+    # Default shoulder for minting
+    # attr_accessor :default_shoulder
 
-    def user
-      @user ||= ENV["EZID_USER"]
-    end
+    # Hash of options to pass to Net::HTTP.start
+    # attr_accessor :http_request_options
 
-    def password
-      @password ||= ENV["EZID_PASSWORD"]
+    def initialize
+      @user = ENV["EZID_USER"]
+      @password = ENV["EZID_PASSWORD"]
+      # @http_request_options = default_http_request_options
     end
 
     def logger
-      @logger ||= ::Logger.new(STDERR)
+      @logger ||= Logger.new(STDERR)
     end
+
+    # def default_http_request_options
+    #   { use_ssl: true }
+    # end
 
   end
 end
