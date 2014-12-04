@@ -83,7 +83,7 @@ module Ezid
 
     # Coerce hash keys to strings
     def stringify_keys(hsh)
-      hsh.keys.map(&:to_s).zip(hsh.values).to_h
+      hsh.each_with_object({}) { |(k, v), memo| memo[k.to_s] = v }
     end
 
     # Escape elements hash keys and values
@@ -109,7 +109,7 @@ module Ezid
     # @param s [String] the string to escape
     # @return [String] the escaped string
     def escape(re, s)
-      s.gsub(re) { |m| URI.encode_www_form_component(m, Encoding::UTF_8) }
+      s.gsub(re) { |m| URI.encode_www_form_component(m.force_encoding(Encoding::UTF_8)) }
     end
 
     # Unescape value from EZID host (or other source)
@@ -125,11 +125,12 @@ module Ezid
     # @param data [String] the string to coerce
     # @return [Hash] the hash of coerced data
     def coerce_string(data)
-      data.gsub(COMMENT_RE, "")
-        .gsub(LINE_CONTINUATION_RE, " ")
-        .split(LINE_ENDING_RE)
-        .map { |line| line.split(ANVL_SEPARATOR, 2).map { |v| unescape(v).strip } }
-        .to_h
+      data.gsub!(COMMENT_RE, "")
+      data.gsub!(LINE_CONTINUATION_RE, " ")
+      data.split(LINE_ENDING_RE).each_with_object({}) do |line, memo|
+        element, value = line.split(ANVL_SEPARATOR, 2)
+        memo[unescape(element.strip)] = unescape(value.strip)
+      end
     end
 
   end

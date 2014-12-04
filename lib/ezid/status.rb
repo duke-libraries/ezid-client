@@ -8,10 +8,10 @@ module Ezid
     end
 
     def subsystems
-      if content[1]
-        content[1].split(/\r?\n/).map { |line| line.split(": ", 2) }.to_h
-      else
-        {}
+      return {} unless content[1]
+      content[1].split(/\r?\n/).each_with_object({}) do |line, memo| 
+        subsystem, status = line.split(": ", 2)
+        memo[subsystem] = status
       end
     end
 

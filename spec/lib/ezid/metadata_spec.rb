@@ -84,6 +84,12 @@ _status: public")
 
     describe "coercion" do
       subject { described_class.new(data) }
+      context "of nil" do
+        let(:data) { nil }
+        it "should return an empty hash" do
+          expect(subject).to eq({})
+        end
+      end
       context "of a string" do
         let(:data) do <<-EOS
 _updated: 1416507086
@@ -127,6 +133,22 @@ EOS
                                   "_export" => "yes",
                                   "_created" => "1416507086",
                                   "_status" => "public"})
+        end
+      end
+      context "of a Metadata instance" do
+        let(:hsh) do 
+          { "_updated" => "1416507086",
+            "_target" => "http://ezid.cdlib.org/id/ark:/99999/fk4fn19h87",
+            "_profile" => "erc",
+            "_ownergroup" => "apitest",
+            "_owner" => "apitest",
+            "_export" => "yes",
+            "_created" => "1416507086",
+            "_status" => "public" }
+        end
+        let(:data) { Metadata.new(hsh) }
+        it "should have the same hash" do
+          expect(subject).to eq(hsh)
         end
       end
     end

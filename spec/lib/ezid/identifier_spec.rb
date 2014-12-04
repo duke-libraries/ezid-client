@@ -49,11 +49,12 @@ module Ezid
         end
       end
       describe "when the id does not exist" do
+        let(:id) { "ark:/99999/fk4zzzzzzz" }
         before do
-          allow_any_instance_of(Client).to receive(:get_identifier_metadata).with("invalid").and_raise(Error)
+          allow_any_instance_of(Client).to receive(:get_identifier_metadata).with(id).and_raise(Error)
         end
         it "should raise an exception" do
-          expect { described_class.find("invalid") }.to raise_error
+          expect { described_class.find(id) }.to raise_error
         end
       end
     end
