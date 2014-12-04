@@ -16,9 +16,15 @@
 # See http://rubydoc.info/gems/rspec-core/RSpec/Core/Configuration
 
 require "ezid-client"
-require "ezid/test_helper"
 
-include Ezid::TestHelper
+Ezid::Client.configure do |config|
+  config.user = "apitest"
+  # Contact EZID for password
+  # config.password = "********" 
+end
+
+ARK_SHOULDER = "ark:/99999/fk4"
+DOI_SHOULDER = "doi:10.5072/FK2"
 
 RSpec.configure do |config|
 

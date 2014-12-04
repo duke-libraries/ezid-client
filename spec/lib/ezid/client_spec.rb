@@ -3,19 +3,15 @@ module Ezid
 
     describe "initialization" do
       describe "without a block" do
-        it "should not open a session" do
-          expect(subject.session).not_to be_open
+        it "should not login" do
+          expect_any_instance_of(described_class).not_to receive(:login)
+          described_class.new
         end
       end
-      describe "with a block" do
-        let(:stub_login) { Response.new(double(body: "success: session cookie return")) }
-        let(:stub_logout) { Response.new(double(body: "success: authentication credentials flushed")) }
-        before do
-          allow(Request).to receive(:execute).with(:Get, "/login") { stub_login }
-          allow(Request).to receive(:execute).with(:Get, "/logout") { stub_logout }
-          allow(stub_login).to receive(:cookie) { "cookie" }
-        end
+      describe "with a block", type: :feature do
         it "should wrap the block in a session" do
+          expect_any_instance_of(described_class).to receive(:login).and_call_original
+          expect_any_instance_of(described_class).to receive(:logout).and_call_original
           described_class.new do |client|
             expect(client.session).to be_open
           end
@@ -23,13 +19,8 @@ module Ezid
       end
     end    
 
-    describe "authentication" do
+    describe "authentication", type: :feature do
       describe "#login" do
-        let(:stub_login) { Response.new(double(body: "success: session cookie return")) }
-        before do
-          allow(Request).to receive(:execute).with(:Get, "/login") { stub_login }
-          allow(stub_login).to receive(:cookie) { "cookie" }
-        end
         it "should open a session" do
           expect(subject.session).to be_closed
           subject.login
@@ -37,9 +28,7 @@ module Ezid
         end
       end
       describe "#logout" do
-        before do
-          subject.login
-        end
+        before { subject.login }
         it "should close the session" do
           expect(subject.session).to be_open
           subject.logout
@@ -47,7 +36,10 @@ module Ezid
         end
       end
       describe "without a session" do
-        it "should send the user name and password"
+        it "should send the user name and password" do
+          expect_any_instance_of(Net::HTTP::Post).to receive(:basic_auth).with(subject.user, subject.password).and_call_original
+          subject.mint_identifier(ARK_SHOULDER)
+        end
       end
     end
 
