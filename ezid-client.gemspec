@@ -5,7 +5,7 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 Gem::Specification.new do |spec|
   spec.name          = "ezid-client"
   spec.version       = File.read(File.expand_path("../VERSION", __FILE__)).chomp
-  spec.authors       = ["dchandekstark"]
+  spec.authors       = ["David Chandek-Stark"]
   spec.email         = ["dchandekstark@gmail.com"]
   spec.summary       = "Ruby client for EZID API Version 2"
   spec.description   = "Ruby client for EZID API Version 2 (http://ezid.cdlib.org/doc/apidoc.html)"
