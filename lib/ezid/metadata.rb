@@ -54,36 +54,13 @@ module Ezid
       to_anvl
     end
 
-    # Adds metadata to the collection
-    # @param data [String, Hash, Ezid::Metadata] the data to add
-    # @return [Ezid::Metadata] the updated metadata
-    def update(data)
-      __getobj__.update(coerce(data))
-      self
-    end
-
-    # Replaces the collection with new metadata
-    # @param data [String, Hash, Ezid::Metadata] the metadata replacing the current metadata
-    # @return [Ezid::Metadata] the replaced metadata
-    def replace(data)
-      __getobj__.replace(coerce(data))
-      self
-    end
-
     private
 
     # Coerce data into a Hash of elements
     def coerce(data)
-      begin
-        stringify_keys(data.to_h)
-      rescue NoMethodError
-        coerce_string(data)
-      end
-    end
-
-    # Coerce hash keys to strings
-    def stringify_keys(hsh)
-      hsh.each_with_object({}) { |(k, v), memo| memo[k.to_s] = v }
+      data.to_h
+    rescue NoMethodError
+      coerce_string(data)
     end
 
     # Escape elements hash keys and values

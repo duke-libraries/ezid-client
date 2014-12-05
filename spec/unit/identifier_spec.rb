@@ -61,7 +61,7 @@ module Ezid
     
     describe "#update" do
       let(:id) { "ark:/99999/fk4fn19h88" }
-      let(:metadata) { {"_status" => "unavailable"} }
+      let(:metadata) { {"status" => "unavailable"} }
       subject { described_class.new(id: id) }
       before do
         allow(subject).to receive(:persisted?) { true }
@@ -70,7 +70,7 @@ module Ezid
         end
       end
       it "should update the metadata" do
-        expect(subject.metadata).to receive(:update).with(metadata)
+        expect(subject).to receive(:update_metadata).with(metadata)
         subject.update(metadata)
       end
       it "should save the identifier" do
@@ -86,8 +86,8 @@ module Ezid
       before do
         allow(subject.client).to receive(:get_identifier_metadata).with(id) { double(metadata: metadata) }
       end
-      it "should update the metadata from EZID" do
-        expect(subject.metadata).to receive(:replace).with(metadata)
+      it "should reinitialize the metadata from EZID" do
+        expect(Metadata).to receive(:new).with(metadata)
         subject.reload
       end
     end
@@ -181,22 +181,6 @@ module Ezid
           end
         end
       end
-    end
-
-    it "should handle CRUD operations", type: :feature do
-      # create (mint)
-      identifier = Ezid::Identifier.create(shoulder: ARK_SHOULDER)
-      expect(identifier.status).to eq("public")
-      # update
-      identifier.target = "http://example.com"
-      identifier.save
-      # retrieve
-      identifier = Ezid::Identifier.find(identifier.id)
-      expect(identifier.target).to eq("http://example.com")
-      # delete
-      identifier = Ezid::Identifier.create(shoulder: ARK_SHOULDER, status: "reserved")
-      identifier.delete
-      expect { Ezid::Identifier.find(identifier.id) }.to raise_error
     end
 
   end

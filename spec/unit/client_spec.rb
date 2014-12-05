@@ -1,47 +1,12 @@
 module Ezid
   RSpec.describe Client do
 
-    describe "initialization" do
-      describe "without a block" do
-        it "should not login" do
-          expect_any_instance_of(described_class).not_to receive(:login)
-          described_class.new
-        end
-      end
-      describe "with a block", type: :feature do
-        it "should wrap the block in a session" do
-          expect_any_instance_of(described_class).to receive(:login).and_call_original
-          expect_any_instance_of(described_class).to receive(:logout).and_call_original
-          described_class.new do |client|
-            expect(client.session).to be_open
-          end
-        end
+    describe "initialization without a block" do
+      it "should not login" do
+        expect_any_instance_of(described_class).not_to receive(:login)
+        described_class.new
       end
     end    
-
-    describe "authentication", type: :feature do
-      describe "#login" do
-        it "should open a session" do
-          expect(subject.session).to be_closed
-          subject.login
-          expect(subject.session).to be_open
-        end
-      end
-      describe "#logout" do
-        before { subject.login }
-        it "should close the session" do
-          expect(subject.session).to be_open
-          subject.logout
-          expect(subject.session).to be_closed
-        end
-      end
-      describe "without a session" do
-        it "should send the user name and password" do
-          expect_any_instance_of(Net::HTTP::Post).to receive(:basic_auth).with(subject.user, subject.password).and_call_original
-          subject.mint_identifier(ARK_SHOULDER)
-        end
-      end
-    end
 
     describe "#create_identifier" do
       let(:id) { "ark:/99999/fk4fn19h88" }
@@ -118,29 +83,6 @@ _export: yes
 _created: 1416507086
 _status: public
 EOS
-      end
-    end
-
-    describe "#modify_identifier", type: :feature do
-      before do
-        @id = described_class.new.mint_identifier(ARK_SHOULDER).id
-      end
-      subject { described_class.new.modify_identifier(@id, "dc.title" => "Test") }
-      it "should update the metadata" do
-        expect(subject).to be_success
-        response = described_class.new.get_identifier_metadata(@id)
-        expect(response.metadata).to match(/dc.title: Test/)
-      end
-    end
-
-    describe "#delete_identifier", type: :feature do
-      before do
-        @id = described_class.new.mint_identifier(ARK_SHOULDER, "_status" => "reserved").id
-      end
-      subject { described_class.new.delete_identifier(@id) }
-      it "should delete the identifier" do
-        expect(subject).to be_success
-        expect { described_class.new.get_identifier_metadata(@id) }.to raise_error
       end
     end
 

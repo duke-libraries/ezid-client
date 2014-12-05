@@ -1,16 +1,25 @@
 module Ezid
+  #
+  # Represents an EZID identifier as a resource.
+  #
+  # @api public
+  #
   class Identifier
 
     attr_reader :id, :client
     attr_accessor :shoulder, :metadata
 
+    # Attributes to display on inspect
     INSPECT_ATTRS = %w( id status target created )
 
+    # EZID status terms
     PUBLIC = "public"
     RESERVED = "reserved"
     UNAVAILABLE = "unavailable"
 
     class << self
+      # Creates or mints an identifier (depending on arguments)
+      # @see #save
       # @return [Ezid::Identifier] the new identifier
       # @raise [Ezid::Error]
       def create(attrs = {})
@@ -18,6 +27,7 @@ module Ezid
         identifier.save
       end
 
+      # Retrieves an identifier
       # @return [Ezid::Identifier] the identifier
       # @raise [Ezid::Error] if the identifier does not exist in EZID
       def find(id)
@@ -31,7 +41,7 @@ module Ezid
       @id = args.delete(:id)
       @shoulder = args.delete(:shoulder)
       @metadata = Metadata.new(args.delete(:metadata))
-      update_attributes(args)
+      update_metadata(args)
       @deleted = false
     end
 
@@ -65,8 +75,12 @@ module Ezid
       reload
     end
 
-    def update_attributes(attrs={})
+    # Updates the metadata 
+    # @param attrs [Hash] the metadata
+    # @return [Ezid::Identifier] the identifier
+    def update_metadata(attrs={})
       attrs.each { |k, v| send("#{k}=", v) }
+      self
     end
 
     # Is the identifier persisted?
@@ -82,13 +96,16 @@ module Ezid
       @deleted
     end
 
+    # Updates the metadata and saves the identifier
+    # @param data [Hash] a hash of metadata
     # @return [Ezid::Identifier] the identifier
     # @raise [Ezid::Error]
-    def update(data)
-      metadata.update(data)
+    def update(data={})
+      update_metadata(data)
       save
     end
 
+    # Reloads the metadata from EZID (local changes will be lost!)
     # @return [Ezid::Identifier] the identifier
     # @raise [Ezid::Error]
     def reload
@@ -96,13 +113,14 @@ module Ezid
       self
     end
 
-    # Empties the (local) metadata
+    # Empties the (local) metadata (changes will be lost!)
     # @return [Ezid::Identifier] the identifier
     def reset
       clear_metadata
       self
     end
 
+    # Deletes the identifier from EZID
     # @return [Ezid::Identifier] the identifier
     # @raise [Ezid::Error]
     def delete
@@ -112,28 +130,36 @@ module Ezid
       reset
     end
 
-    def method_missing(name, *args)
-      return metadata.send(name, *args) if metadata.respond_to?(name)
-      super
-    end
-
+    # Is the identifier reserved?
+    # @return [Boolean]
     def reserved?
       status == RESERVED
     end
 
+    # Is the identifier public?
+    # @return [Boolean]
     def public?
       status == PUBLIC
     end
 
+    # Is the identifier unavailable?
+    # @return [Boolean]
     def unavailable?
       status == UNAVAILABLE
+    end
+
+    protected
+
+    def method_missing(name, *args)
+      return metadata.send(name, *args) if metadata.respond_to?(name)
+      super
     end
 
     private
 
     def refresh_metadata
       response = client.get_identifier_metadata(id)
-      @metadata.replace(response.metadata)
+      @metadata = Metadata.new(response.metadata)
     end
 
     def clear_metadata
