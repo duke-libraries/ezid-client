@@ -19,7 +19,9 @@ Or install it yourself as:
 
     $ gem install ezid-client
 
-## Resource-oriented Usage (CRUD)
+## Basic Resource-oriented Usage (CRUD)
+
+See the test suite for more examples.
 
 Create (Mint)
 
