@@ -1,7 +1,7 @@
 module Ezid
   RSpec.describe Identifier do
 
-    it "should handle CRUD operations", type: :integration do
+    it "should handle CRUD operations" do
       # create (mint)
       identifier = described_class.create(shoulder: ARK_SHOULDER)
       expect(identifier.status).to eq("public")

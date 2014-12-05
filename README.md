@@ -98,7 +98,7 @@ client = Ezid::Client.new(user: "eziduser", password: "ezidpass")
 
 See http://ezid.cdlib.org/doc/apidoc.html#testing-the-api.
 
-Integration tests have been tagged `type: :feature`.  In order to run those tests successfully, you must supply the password for the test account "apitest" (contact EZID).  You can exclude the integration tests with the RSpec option `--tag ~type:feature`.
+In order to run the integration tests successfully, you must supply the password for the test account "apitest" (contact EZID).  To run the test suite without the integration tests, use the `rake ci` task.
 
 ## Contributing
 

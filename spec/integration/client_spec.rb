@@ -1,5 +1,5 @@
 module Ezid
-  RSpec.describe Client, type: :integration do
+  RSpec.describe Client do
 
     shared_examples "an EZID client" do |client|
       it "should mint and modify" do      
