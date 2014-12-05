@@ -2,6 +2,9 @@
 
 EZID API Version 2 bindings. See http://ezid.cdlib.org/doc/apidoc.html.
 
+[![Gem Version](https://badge.fury.io/rb/ezid-client.svg)](http://badge.fury.io/rb/ezid-client)
+[![Build Status](https://travis-ci.org/duke-libraries/ezid-client.svg?branch=master)](https://travis-ci.org/duke-libraries/ezid-client)
+
 ## Installation
 
 Add this line to your application's Gemfile:
