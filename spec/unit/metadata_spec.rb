@@ -3,11 +3,11 @@ module Ezid
     
     describe "reserved elements" do
       describe "readers" do
-        Metadata::RESERVED_ELEMENTS.each do |element|
-          next if element == "_crossref"
+        Metadata::RESERVED_ELEMENTS.each do |element|   
           it "should have a reader for '#{element}'" do
             expect(subject).to receive(:reader).with(element)
-            subject.send(element.sub("_", ""))
+            reader = (element == "_crossref") ? element : element.sub("_", "")
+            subject.send(reader)
           end
         end
         describe "for time-based elements" do
@@ -27,7 +27,8 @@ module Ezid
           next if element == "_crossref"
           it "should have a writer for '#{element}'" do
             expect(subject).to receive(:writer).with(element, "value")
-            subject.send("#{element.sub('_', '')}=", "value")
+            writer = ((element == "_crossref") ? element : element.sub("_", "")).concat("=")
+            subject.send(writer, "value")
           end      
         end
       end
@@ -50,6 +51,15 @@ module Ezid
                 subject.send("#{profile}_#{element}=", "value")
               end
             end
+          end
+          next if profile == "dc"
+          it "should have a reader for '#{profile}'" do
+            expect(subject).to receive(:reader).with(profile)
+            subject.send(profile)
+          end
+          it "should have a writer for '#{profile}'" do
+            expect(subject).to receive(:writer).with(profile, "value")
+            subject.send("#{profile}=", "value")
           end
         end
       end

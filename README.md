@@ -71,7 +71,7 @@ I, [2014-12-04T15:12:48.853964 #86734]  INFO -- : EZID DELETE ark:/99999/fk4n58p
 
 ## Metadata handling
 
-See `Ezid::Metadata`.
+See `Ezid::Metadata` class and examples in `spec/unit/metadata_spec.rb`.
 
 ## Authentication
 

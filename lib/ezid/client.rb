@@ -12,6 +12,7 @@ module Ezid
   # EZID client
   #
   # @api public
+  #
   class Client
 
     class << self

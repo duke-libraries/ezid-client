@@ -5,6 +5,7 @@ module Ezid
   # A response from the EZID service.
   #
   # @api private
+  #
   class Response < SimpleDelegator
 
     # Success response status

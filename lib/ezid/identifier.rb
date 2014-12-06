@@ -1,3 +1,5 @@
+require "forwardable"
+
 module Ezid
   #
   # Represents an EZID identifier as a resource.
@@ -5,9 +7,13 @@ module Ezid
   # @api public
   #
   class Identifier
+    extend Forwardable
 
     attr_reader :id, :client
     attr_accessor :shoulder, :metadata
+
+    def_delegators :metadata, *(Metadata.elements.readers)
+    def_delegators :metadata, *(Metadata.elements.writers)
 
     # Attributes to display on inspect
     INSPECT_ATTRS = %w( id status target created )

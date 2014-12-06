@@ -3,6 +3,7 @@ module Ezid
   # An EZID session
   #
   # @api private
+  #
   class Session
 
     attr_reader :cookie

@@ -1,4 +1,10 @@
 module Ezid
+  #
+  # A response to an EZID status request
+  #
+  # @see Ezid::Response
+  # @api private
+  #
   class Status < SimpleDelegator
 
     SUBSYSTEMS = %w( noid ldap datacite )

@@ -183,5 +183,26 @@ module Ezid
       end
     end
 
+    describe "boolean status methods" do
+      context "when the status is 'public'" do
+        before { allow(subject.metadata).to receive(:status) { Identifier::PUBLIC } }
+        it { is_expected.to be_public } 
+        it { is_expected.not_to be_reserved }
+        it { is_expected.not_to be_unavailable }
+      end
+      context "when the status is 'reserved'" do
+        before { allow(subject.metadata).to receive(:status) { Identifier::RESERVED } }
+        it { is_expected.not_to be_public } 
+        it { is_expected.to be_reserved }
+        it { is_expected.not_to be_unavailable }
+      end
+      context "when the status is 'unavailable'" do
+        before { allow(subject.metadata).to receive(:status) { Identifier::UNAVAILABLE } }
+        it { is_expected.not_to be_public } 
+        it { is_expected.not_to be_reserved }
+        it { is_expected.to be_unavailable }
+      end
+    end
+
   end
 end
