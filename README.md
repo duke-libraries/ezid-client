@@ -1,4 +1,4 @@
-# Ezid::Client
+# EZID Client
 
 EZID API Version 2 bindings. See http://ezid.cdlib.org/doc/apidoc.html.
 

@@ -154,13 +154,6 @@ module Ezid
       status == UNAVAILABLE
     end
 
-    protected
-
-    def method_missing(name, *args)
-      return metadata.send(name, *args) if metadata.respond_to?(name)
-      super
-    end
-
     private
 
     def refresh_metadata
