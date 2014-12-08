@@ -2,19 +2,22 @@ module Ezid
   RSpec.describe Identifier do
 
     it "should handle CRUD operations" do
-      # create (mint)
-      identifier = described_class.create(shoulder: ARK_SHOULDER)
-      expect(identifier.status).to eq("public")
+      # mint
+      minted = described_class.create(shoulder: ARK_SHOULDER)
+      expect(minted.status).to eq("public")
+      # create
+      created = described_class.create(id: "#{minted}/123")
+      expect(created.id).to eq("#{minted}/123")
       # update
-      identifier.target = "http://example.com"
-      identifier.save
+      minted.target = "http://example.com"
+      minted.save
       # retrieve
-      identifier = described_class.find(identifier.id)
-      expect(identifier.target).to eq("http://example.com")
+      retrieved = described_class.find(minted.id)
+      expect(retrieved.target).to eq("http://example.com")
       # delete
-      identifier = described_class.create(shoulder: ARK_SHOULDER, status: "reserved")
-      identifier.delete
-      expect { described_class.find(identifier.id) }.to raise_error
+      reserved = described_class.create(shoulder: ARK_SHOULDER, status: "reserved")
+      reserved.delete
+      expect { described_class.find(reserved.id) }.to raise_error
     end
 
   end
