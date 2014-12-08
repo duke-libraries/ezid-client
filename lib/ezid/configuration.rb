@@ -10,42 +10,39 @@ module Ezid
   class Configuration
 
     # EZID user name
-    #   Default: value of EZID_USER environment variable
+    #   Default: value of `EZID_USER` environment variable
     attr_accessor :user
 
     # EZID password
-    #   Default: value of EZID_PASSWORD environment variable
+    #   Default: value of `EZID_PASSWORD` environment variable
     attr_accessor :password
 
     # Ruby logger instance
     #   Default device: STDERR
     attr_writer :logger
 
-    # Default metadata profile
+    # Default metadata profile - "erc" (EZID default), "dc", "datacite", or "crossref"
+    # If set, new identifiers (created or minted) will set the "_profile" element to 
+    # this value.
     # attr_accessor :default_metadata_profile
 
-    # Default status - set only if default should not "public" (EZID default)
+    # Default status - "public" (EZID default), "reserved", or "unavailable"
+    # If set, new identifiers (created or minted) will set the "_status" element to
+    # this value.
     # attr_accessor :default_status
 
-    # Default shoulder for minting
-    # attr_accessor :default_shoulder
-
-    # Hash of options to pass to Net::HTTP.start
-    # attr_accessor :http_request_options
+    # Default shoulder for minting (scheme + NAAN + shoulder)
+    # @example "ark:/99999/fk4"
+    attr_accessor :default_shoulder
 
     def initialize
       @user = ENV["EZID_USER"]
       @password = ENV["EZID_PASSWORD"]
-      # @http_request_options = default_http_request_options
     end
 
     def logger
       @logger ||= Logger.new(STDERR)
     end
-
-    # def default_http_request_options
-    #   { use_ssl: true }
-    # end
 
   end
 end

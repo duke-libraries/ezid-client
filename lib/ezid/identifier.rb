@@ -73,11 +73,7 @@ module Ezid
     #   with an error status.
     def save
       raise Error, "Cannot save a deleted identifier." if deleted?
-      if persisted?
-        modify
-      else
-        create_or_mint
-      end
+      persisted? ? modify : create_or_mint
       reload
     end
 
@@ -170,13 +166,7 @@ module Ezid
     end
 
     def create_or_mint
-      if id
-        create
-      elsif shoulder
-        mint
-      else
-        raise Error, "Unable to create or mint identifier when neither `id' nor `shoulder' present."
-      end
+      id ? create : mint
     end
 
     def mint

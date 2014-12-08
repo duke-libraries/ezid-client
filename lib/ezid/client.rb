@@ -107,7 +107,8 @@ module Ezid
     # @param metadata [String, Hash, Ezid::Metadata] metadata to set
     # @raise [Ezid::Error]
     # @return [Ezid::Response] the response
-    def mint_identifier(shoulder, metadata=nil)
+    def mint_identifier(shoulder=nil, metadata=nil)
+      shoulder ||= config.default_shoulder
       raise Error, "Shoulder missing -- cannot mint identifier." unless shoulder
       response = Request.execute(:Post, "/shoulder/#{shoulder}") do |request|
         add_authentication(request)

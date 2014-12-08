@@ -23,9 +23,9 @@ module Ezid
     end
 
     describe "#mint_identifier" do
-      before { allow(Request).to receive(:execute) { stub_response } }
       describe "which is an ARK" do
         let(:stub_response) { Response.new(double(body: "success: ark:/99999/fk4fn19h88")) }
+        before { allow(Request).to receive(:execute).with(:Post, "/shoulder/#{ARK_SHOULDER}") { stub_response } }
         subject { described_class.new.mint_identifier(ARK_SHOULDER) }
         it "should be a succes" do
           expect(subject).to be_success
@@ -44,11 +44,30 @@ datacite.publicationyear: 2014
 datacite.resourcetype: Other
 EOS
         end
+        before { allow(Request).to receive(:execute).with(:Post, "/shoulder/#{DOI_SHOULDER}") { stub_response } }
         subject { described_class.new.mint_identifier(DOI_SHOULDER, metadata) }
         it "should be a sucess" do          
           expect(subject).to be_success
           expect(subject.id).to eq("doi:10.5072/FK2TEST")
           expect(subject.shadow_ark).to eq("ark:/99999/fk4fn19h88")
+        end
+      end
+      describe "when a shoulder is not given" do
+        let(:stub_response) { Response.new(double(body: "success: ark:/99999/fk4fn19h88")) }
+        context "and the :default_shoulder config option is set" do
+          subject { described_class.new.mint_identifier }
+          before do
+            allow(Request).to receive(:execute).with(:Post, "/shoulder/#{ARK_SHOULDER}") { stub_response } 
+            allow(Client.config).to receive(:default_shoulder) { ARK_SHOULDER }         
+          end
+          it "should use the default shoulder" do
+            expect(subject).to be_success
+          end
+        end
+        context "and the :default_shoulder config option is not set" do
+          it "should raise an exception" do
+            expect { described_class.new.mint_identifier }.to raise_error
+          end
         end
       end
     end
