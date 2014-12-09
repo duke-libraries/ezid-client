@@ -3,7 +3,7 @@ module Ezid
 
     shared_examples "an EZID client" do |client|
       it "should mint and modify" do      
-        minted = client.mint_identifier(ARK_SHOULDER, "_status: reserved")
+        minted = client.mint_identifier(TEST_ARK_SHOULDER, "_status: reserved")
         expect(minted).to be_success
         @id = minted.id
         modified = client.modify_identifier(@id, "dc.title" => "Test")
@@ -46,7 +46,7 @@ module Ezid
       describe "without a session" do
         it "should send the user name and password" do
           expect_any_instance_of(Net::HTTP::Post).to receive(:basic_auth).with(subject.user, subject.password).and_call_original
-          subject.mint_identifier(ARK_SHOULDER)
+          subject.mint_identifier(TEST_ARK_SHOULDER)
         end
       end
     end

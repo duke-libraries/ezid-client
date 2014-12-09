@@ -155,7 +155,29 @@ end
 client = Ezid::Client.new(user: "eziduser", password: "ezidpass")
 ```
 
-## Running the tests
+## Test Helper
+
+If you have tests that (directly or indirectly) use `ezid-client` you may want to require the test helper module:
+
+```ruby
+require "ezid/test_helper"
+```
+
+The module provides constants:
+
+- `TEST_ARK_SHOULDER` => "ark:/99999/fk4"
+- `TEST_DOI_SHOULDER` => "doi:10.5072/FK2"
+- `TEST_USER` => "apitest"
+
+The test user password is not provided - contact EZID and configure as above - or use your own EZID credentials, since all accounts can mint/create on the test shoulders.
+
+A convenience method `ezid_test_mode!` is provided to configure the client to:
+
+- authenticate as `TEST_USER`
+- use `TEST_ARK_SHOULDER` as the default shoulder
+- log to the null device (instead of default STDERR)
+
+## Running the ezid-client tests
 
 See http://ezid.cdlib.org/doc/apidoc.html#testing-the-api.
 

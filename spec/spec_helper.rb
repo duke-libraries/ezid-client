@@ -18,17 +18,8 @@
 require 'coveralls'
 Coveralls.wear!
 
-require "ezid-client"
-
-Ezid::Client.configure do |config|
-  config.user = "apitest"
-  # Contact EZID for password
-  # config.password = "********"
-  config.logger = Logger.new(File::NULL)
-end
-
-ARK_SHOULDER = "ark:/99999/fk4"
-DOI_SHOULDER = "doi:10.5072/FK2"
+require "ezid/test_helper"
+ezid_test_mode!
 
 RSpec.configure do |config|
 

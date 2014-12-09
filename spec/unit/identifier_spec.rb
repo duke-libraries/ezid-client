@@ -2,7 +2,7 @@ module Ezid
   RSpec.describe Identifier do
 
     describe ".create" do
-      let(:attrs) { {shoulder: ARK_SHOULDER, profile: "dc", target: "http://example.com"} }
+      let(:attrs) { {shoulder: TEST_ARK_SHOULDER, profile: "dc", target: "http://example.com"} }
       it "should instantiate a new Identifier and save it" do        
         expect(described_class).to receive(:new).with(attrs).and_call_original
         expect_any_instance_of(described_class).to receive(:save) { double }
@@ -59,7 +59,7 @@ module Ezid
           expect(subject.status).to eq("reserved")
         end
         context "when explicit arguments override the defaults" do
-          subject { described_class.new(shoulder: ARK_SHOULDER, status: "public") }
+          subject { described_class.new(shoulder: TEST_ARK_SHOULDER, status: "public") }
           it "should override the defaults" do
             expect(subject.profile).to eq("dc")
             expect(subject.status).to eq("public")
@@ -150,13 +150,14 @@ module Ezid
         end
         context "and `id' is not present" do
           context "and `shoulder' is present" do
-            before { allow(subject).to receive(:shoulder) { ARK_SHOULDER } }
+            before { allow(subject).to receive(:shoulder) { TEST_ARK_SHOULDER } }
             it "should mint the identifier" do
-              expect(subject.client).to receive(:mint_identifier).with(ARK_SHOULDER, {}) { double(id: "id") }
+              expect(subject.client).to receive(:mint_identifier).with(TEST_ARK_SHOULDER, {}) { double(id: "id") }
               subject.save
             end
           end
           context "and `shoulder' is not present" do
+            before { allow(Client.config).to receive(:default_shoulder) { nil } }
             it "should raise an exception" do
               expect { subject.save }.to raise_error
             end
