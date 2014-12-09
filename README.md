@@ -25,7 +25,7 @@ Or install it yourself as:
 
 **Create** (Mint/Create)
 
-"Mint" ("shoulder" is required)
+[Mint](http://ezid.cdlib.org/doc/apidoc.html#operation-mint-identifier)
 
 ```ruby
 >> identifier = Ezid::Identifier.create(shoulder: "ark:/99999/fk4")
@@ -57,7 +57,7 @@ I, [2014-12-09T11:22:35.317181 #32279]  INFO -- : EZID GET ark:/99999/fk43f4wd4v
 => #<Ezid::Identifier id="ark:/99999/fk43f4wd4v" status="public" target="http://ezid.cdlib.org/id/ark:/99999/fk43f4wd4v" created="2014-12-09 16:22:35 UTC">
 ```
 
-"Create" (i.e., not mint; "id" is required)
+[Create](http://ezid.cdlib.org/doc/apidoc.html#operation-create-identifier)
 
 ```ruby
 >> identifier = Ezid::Identifier.create(id: "ark:/99999/fk4rx9d523/12345")
