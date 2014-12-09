@@ -21,9 +21,11 @@ Or install it yourself as:
 
 ## Basic Resource-oriented Usage (CRUD)
 
-See the test suite for more examples.
+*See the test suite for more examples.*
 
-Create (Mint)
+**Create** (Mint/Create)
+
+"Mint" ("shoulder" is required)
 
 ```ruby
 >> identifier = Ezid::Identifier.create(shoulder: "ark:/99999/fk4")
@@ -38,7 +40,33 @@ I, [2014-12-04T15:06:03.249793 #86655]  INFO -- : EZID GET ark:/99999/fk4rx9d523
 => "http://ezid.cdlib.org/id/ark:/99999/fk4rx9d523"
 ```
 
-Retrieve (Get)
+A default shoulder can be configured:
+
+```ruby
+Ezid::Client.configure do |config|
+  config.default_shoulder = "ark:/99999/fk4"
+end
+```
+
+Then identifiers can minted on the default shoulder:
+
+```ruby
+>> identifier = Ezid::Identifier.create
+I, [2014-12-09T11:22:34.499860 #32279]  INFO -- : EZID MINT ark:/99999/fk4 -- success: ark:/99999/fk43f4wd4v
+I, [2014-12-09T11:22:35.317181 #32279]  INFO -- : EZID GET ark:/99999/fk43f4wd4v -- success: ark:/99999/fk43f4wd4v
+=> #<Ezid::Identifier id="ark:/99999/fk43f4wd4v" status="public" target="http://ezid.cdlib.org/id/ark:/99999/fk43f4wd4v" created="2014-12-09 16:22:35 UTC">
+```
+
+"Create" (i.e., not mint; "id" is required)
+
+```ruby
+>> identifier = Ezid::Identifier.create(id: "ark:/99999/fk4rx9d523/12345")
+I, [2014-12-09T11:21:42.077297 #32279]  INFO -- : EZID CREATE ark:/99999/fk4rx9d523/12345 -- success: ark:/99999/fk4rx9d523/12345
+I, [2014-12-09T11:21:42.808534 #32279]  INFO -- : EZID GET ark:/99999/fk4rx9d523/12345 -- success: ark:/99999/fk4rx9d523/12345
+=> #<Ezid::Identifier id="ark:/99999/fk4rx9d523/12345" status="public" target="http://ezid.cdlib.org/id/ark:/99999/fk4rx9d523/12345" created="2014-12-09 16:21:42 UTC">
+```
+
+**Retrieve** (Get Metadata)
 
 ```ruby
 >> identifier = Ezid::Identifier.find("ark:/99999/fk4rx9d523")
@@ -46,7 +74,7 @@ I, [2014-12-04T15:07:00.648676 #86655]  INFO -- : EZID GET ark:/99999/fk4rx9d523
 => #<Ezid::Identifier id="ark:/99999/fk4rx9d523" status="public" target="http://ezid.cdlib.org/id/ark:/99999/fk4rx9d523" created="2014-12-04 20:06:02 UTC">
 ```
 
-Update (Modify)
+**Update** (Modify)
 
 ```ruby
 >> identifier.target = "http://example.com"
@@ -57,7 +85,9 @@ I, [2014-12-04T15:11:58.099128 #86734]  INFO -- : EZID GET ark:/99999/fk4rx9d523
 => #<Ezid::Identifier id="ark:/99999/fk4rx9d523" status="public" target="http://example.com" created="2014-12-04 20:06:02 UTC">
 ```
 
-Delete
+**Delete** 
+
+*Identifier status must be "reserved" to delete.* http://ezid.cdlib.org/doc/apidoc.html#operation-delete-identifier
 
 ```ruby
 >> identifier = Ezid::Identifier.create(shoulder: "ark:/99999/fk4", status: "reserved")
@@ -72,6 +102,19 @@ I, [2014-12-04T15:12:48.853964 #86734]  INFO -- : EZID DELETE ark:/99999/fk4n58p
 ## Metadata handling
 
 Although "EZID imposes no requirements on the presence or form of citation metadata"[*](http://ezid.cdlib.org/doc/apidoc.html#metadata-requirements-mapping), `ezid-client` is intended to support the EZID [reserved metadata elements](http://ezid.cdlib.org/doc/apidoc.html#internal-metadata) and [metadata profiles](http://ezid.cdlib.org/doc/apidoc.html#metadata-profiles). While it is possible to use the client to send and receive any metadata, the object methods are geared towards the defined elements.  Therefore it was seen fit, for example, to map the method `Ezid::Identifier#status` to the "_status" element.  Likewise, all the reserved elements, except for "_crossref", have readers and -- for user-writable elements -- writers without the leading underscores.  Since there are both "_crossref" and "crossref" elements, their accessors match the elements names.  Similarly, accessors for metadata profile elements use underscores in place of dots -- for example, `Ezid::Identifer#dc_title` and `#dc_title=` for the "dc.title" element.
+
+### Setting default metadata values
+
+Default values for new identifiers can be set:
+
+```ruby
+Ezid::Client.configure do |config|
+  # set multiple defaults with a hash
+  config.identifier.defaults = {status: "reserved", profile: "dc"}
+  # or set individual elements
+  config.identifier.defaults[:status] = "reserved"
+end
+```
 
 ## Authentication
 
