@@ -77,12 +77,16 @@ I, [2014-12-04T15:07:00.648676 #86655]  INFO -- : EZID GET ark:/99999/fk4rx9d523
 **Update** (Modify)
 
 ```ruby
+>> identifier.target
+=> "http://ezid.cdlib.org/id/ark:/99999/fk43f4wd4v"
 >> identifier.target = "http://example.com"
 => "http://example.com"
 >> identifier.save
-I, [2014-12-04T15:11:57.263906 #86734]  INFO -- : EZID MODIFY ark:/99999/fk4rx9d523 -- success: ark:/99999/fk4rx9d523
-I, [2014-12-04T15:11:58.099128 #86734]  INFO -- : EZID GET ark:/99999/fk4rx9d523 -- success: ark:/99999/fk4rx9d523
-=> #<Ezid::Identifier id="ark:/99999/fk4rx9d523" status="public" target="http://example.com" created="2014-12-04 20:06:02 UTC">
+I, [2014-12-09T11:24:26.321801 #32279]  INFO -- : EZID MODIFY ark:/99999/fk43f4wd4v -- success: ark:/99999/fk43f4wd4v
+I, [2014-12-09T11:24:27.039288 #32279]  INFO -- : EZID GET ark:/99999/fk43f4wd4v -- success: ark:/99999/fk43f4wd4v
+=> #<Ezid::Identifier id="ark:/99999/fk43f4wd4v" status="public" target="http://example.com" created="2014-12-09 16:22:35 UTC">
+>> identifier.target
+=> "http://example.com"
 ```
 
 **Delete** 
