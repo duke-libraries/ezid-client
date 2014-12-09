@@ -44,5 +44,9 @@ module Ezid
       @logger ||= Logger.new(STDERR)
     end
 
+    def identifier
+      Identifier
+    end
+
   end
 end

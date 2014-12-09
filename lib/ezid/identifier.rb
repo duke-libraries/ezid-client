@@ -23,7 +23,9 @@ module Ezid
     RESERVED = "reserved"
     UNAVAILABLE = "unavailable"
 
-    class << self
+    class << self      
+      attr_accessor :defaults
+
       # Creates or mints an identifier (depending on arguments)
       # @see #save
       # @return [Ezid::Identifier] the new identifier
@@ -42,13 +44,14 @@ module Ezid
       end
     end
 
+    self.defaults = {}
+
     def initialize(args={})
       @client = args.delete(:client) || Client.new
       @id = args.delete(:id)
       @shoulder = args.delete(:shoulder)
-      @metadata = Metadata.new(args.delete(:metadata))
-      update_metadata(args)
       @deleted = false
+      init_metadata(args)
     end
 
     def inspect
@@ -178,8 +181,9 @@ module Ezid
       client.create_identifier(id, metadata)
     end
 
-    def init_metadata(args={})
+    def init_metadata(args)
+      @metadata = Metadata.new(args.delete(:metadata))
+      update_metadata(self.class.defaults.merge(args))
     end
-
   end
 end

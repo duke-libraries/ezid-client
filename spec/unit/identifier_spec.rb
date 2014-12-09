@@ -2,91 +2,87 @@ module Ezid
   RSpec.describe Identifier do
 
     describe ".create" do
-      describe "when given an id" do
-        let(:id) { "ark:/99999/fk4zzzzzzz" }
-        subject { described_class.create(id: id) }
-        before do
-          allow_any_instance_of(Client).to receive(:create_identifier).with(id, {}) { double(id: id) }
-          allow_any_instance_of(Client).to receive(:get_identifier_metadata).with(id) { double(metadata: {}) }
-        end
-        it "should create an identifier" do
-          expect(subject).to be_a(described_class)
-          expect(subject.id).to eq(id)
-        end
-      end
-      describe "when given a shoulder (and no id)" do
-        let(:id) { "ark:/99999/fk4fn19h88" }
-        subject { described_class.create(shoulder: ARK_SHOULDER) }
-        before do
-          allow_any_instance_of(Client).to receive(:mint_identifier).with(ARK_SHOULDER, {}) { double(id: id) }
-          allow_any_instance_of(Client).to receive(:get_identifier_metadata).with(id) { double(metadata: {}) }
-        end
-        it "should mint an identifier" do
-          expect(subject).to be_a(described_class)
-          expect(subject.id).to eq(id)
-        end
+      let(:attrs) { {shoulder: ARK_SHOULDER, profile: "dc", target: "http://example.com"} }
+      it "should instantiate a new Identifier and save it" do        
+        expect(described_class).to receive(:new).with(attrs).and_call_original
+        expect_any_instance_of(described_class).to receive(:save) { double }
+        described_class.create(attrs)
       end
       describe "when given neither an id nor a shoulder" do
+        before { allow(described_class).to receive(:defaults) {} }
         it "should raise an exception" do
           expect { described_class.create }.to raise_error
         end
       end
-      describe "with metadata" do
-        it "should send the metadata"
-      end
     end
 
     describe ".find" do
-      describe "when the id exists" do
-        let(:id) { "ark:/99999/fk4fn19h88" }
-        subject { described_class.find(id) }
-        before do
-          allow_any_instance_of(Client).to receive(:get_identifier_metadata).with(id) { double(id: id, metadata: {}) }
+      it "should instantiate a new identifier and reload" do
+        expect(described_class).to receive(:new).with(id: "id").and_call_original
+        expect_any_instance_of(described_class).to receive(:reload) { double }
+        described_class.find("id")
+      end
+    end
+
+    describe ".defaults" do
+      before { @original_defaults = described_class.defaults }
+      after { described_class.defaults = @original_defaults }
+      it "should be settable via client config" do
+        Client.config.identifier.defaults = {status: "reserved"}
+        expect(described_class.defaults).to eq({status: "reserved"})
+      end
+    end
+
+    describe "#initialize" do
+      describe "with metadata" do
+        describe "via the :metadata argument" do
+          subject { described_class.new(metadata: "_profile: dc\n_target: http://example.com") }
+          it "should set the metadata" do
+            expect(subject.profile).to eq("dc")
+            expect(subject.target).to eq("http://example.com")
+          end
         end
-        it "should get the identifier" do
-          expect(subject).to be_a(Identifier)
-          expect(subject.id).to eq(id)
+        describe "via keyword arguments" do
+          subject { described_class.new(profile: "dc", target: "http://example.com") }
+          it "should set the metadata" do
+            expect(subject.profile).to eq("dc")
+            expect(subject.target).to eq("http://example.com")
+          end
         end
       end
-      describe "when the id does not exist" do
-        let(:id) { "ark:/99999/fk4zzzzzzz" }
+      describe "default metadata" do
         before do
-          allow_any_instance_of(Client).to receive(:get_identifier_metadata).with(id).and_raise(Error)
+          allow(described_class).to receive(:defaults) { {profile: "dc", status: "reserved"} }
         end
-        it "should raise an exception" do
-          expect { described_class.find(id) }.to raise_error
+        it "should set the default metadata" do
+          expect(subject.profile).to eq("dc")
+          expect(subject.status).to eq("reserved")
+        end
+        context "when explicit arguments override the defaults" do
+          subject { described_class.new(shoulder: ARK_SHOULDER, status: "public") }
+          it "should override the defaults" do
+            expect(subject.profile).to eq("dc")
+            expect(subject.status).to eq("public")
+          end
         end
       end
     end
     
     describe "#update" do
-      let(:id) { "ark:/99999/fk4fn19h88" }
       let(:metadata) { {"status" => "unavailable"} }
-      subject { described_class.new(id: id) }
-      before do
-        allow(subject).to receive(:persisted?) { true }
-        allow(subject.client).to receive(:modify_identifier).with(id, subject.metadata) do
-          double(id: id, metadata: {})
-        end
-      end
-      it "should update the metadata" do
+      subject { described_class.new(id: "id") }
+      it "should update the metadata and save" do
         expect(subject).to receive(:update_metadata).with(metadata)
-        subject.update(metadata)
-      end
-      it "should save the identifier" do
-        expect(subject).to receive(:save)
+        expect(subject).to receive(:save) { double }
         subject.update(metadata)
       end
     end
 
     describe "#reload" do
-      let(:id) { "ark:/99999/fk4fn19h88" }
-      let(:metadata) { "_created: 1416507086" }
-      subject { described_class.new(id: id) }
-      before do
-        allow(subject.client).to receive(:get_identifier_metadata).with(id) { double(metadata: metadata) }
-      end
+      let(:metadata) { "_profile: erc" }
+      before { allow(subject).to receive(:id) { "id" } }
       it "should reinitialize the metadata from EZID" do
+        expect(subject.client).to receive(:get_identifier_metadata).with("id") { double(id: "id", metadata: metadata) }
         expect(Metadata).to receive(:new).with(metadata)
         subject.reload
       end
@@ -121,31 +117,23 @@ module Ezid
     end
 
     describe "#delete" do
-      let(:id) { "ark:/99999/fk4zzzzzzz" }
-      subject { described_class.new(id: id, status: "reserved") }
-      before do
-        allow_any_instance_of(Client).to receive(:delete_identifier).with(id) { double(id: id) }
-      end
+      subject { described_class.new(id: "id", status: "reserved") }
       it "should delete the identifier" do
-        expect(subject.client).to receive(:delete_identifier).with(id)
+        expect(subject.client).to receive(:delete_identifier).with("id") { double(id: "id") }
         subject.delete
         expect(subject).to be_deleted
       end
     end
 
     describe "#save" do
-      let(:id) { "ark:/99999/fk4zzzzzzz" }
-      before do
-        allow(subject.client).to receive(:get_identifier_metadata).with(id) { double(metadata: {}) }
-      end
+      before { allow(subject).to receive(:reload) { double } }
       context "when the identifier is persisted" do
         before do
-          allow_any_instance_of(Client).to receive(:modify_identifier).with(id, {}) { double(id: id) }
-          allow(subject).to receive(:id) { id }
+          allow(subject).to receive(:id) { "id" }
           allow(subject).to receive(:persisted?) { true }
         end
         it "should modify the identifier" do
-          expect(subject.client).to receive(:modify_identifier).with(id, {})
+          expect(subject.client).to receive(:modify_identifier).with("id", {}) { double(id: "id") }
           subject.save
         end
       end
@@ -154,23 +142,17 @@ module Ezid
           allow(subject).to receive(:persisted?) { false }
         end
         context "and `id' is present" do
-          before do
-            allow(subject).to receive(:id) { id }
-            allow_any_instance_of(Client).to receive(:create_identifier).with(id, {}) { double(id: id) }
-          end
+          before { allow(subject).to receive(:id) { "id" } }
           it "should create the identifier" do
-            expect(subject.client).to receive(:create_identifier).with(id, {})
+            expect(subject.client).to receive(:create_identifier).with("id", {}) { double(id: "id") }
             subject.save
           end
         end
         context "and `id' is not present" do
           context "and `shoulder' is present" do
-            before do
-              allow(subject).to receive(:shoulder) { ARK_SHOULDER }
-              allow_any_instance_of(Client).to receive(:mint_identifier).with(ARK_SHOULDER, {}) { double(id: id) }
-            end
+            before { allow(subject).to receive(:shoulder) { ARK_SHOULDER } }
             it "should mint the identifier" do
-              expect(subject.client).to receive(:mint_identifier).with(ARK_SHOULDER, {})
+              expect(subject.client).to receive(:mint_identifier).with(ARK_SHOULDER, {}) { double(id: "id") }
               subject.save
             end
           end
