@@ -109,7 +109,7 @@ Although "EZID imposes no requirements on the presence or form of citation metad
 
 **Setting default metadata values**
 
-Default values for new identifiers can be set:
+Default metadata values can be set:
 
 ```ruby
 Ezid::Client.configure do |config|
@@ -117,7 +117,21 @@ Ezid::Client.configure do |config|
   config.identifier.defaults = {status: "reserved", profile: "dc"}
   # or set individual elements
   config.identifier.defaults[:status] = "reserved"
+  config.identifier.defaults[:profile] = "dc"
 end
+```
+
+Then new identifiers will receive the defaults:
+
+```ruby
+>> identifier = Ezid::Identifier.create(shoulder: "ark:/99999/fk4")
+I, [2014-12-09T11:38:37.335136 #32279]  INFO -- : EZID MINT ark:/99999/fk4 -- success: ark:/99999/fk4zs2w500
+I, [2014-12-09T11:38:38.153546 #32279]  INFO -- : EZID GET ark:/99999/fk4zs2w500 -- success: ark:/99999/fk4zs2w500
+=> #<Ezid::Identifier id="ark:/99999/fk4zs2w500" status="reserved" target="http://ezid.cdlib.org/id/ark:/99999/fk4zs2w500" created="2014-12-09 16:38:38 UTC">
+>> identifier.profile
+=> "dc"
+>> identifier.status
+=> "reserved"
 ```
 
 ## Authentication
