@@ -107,7 +107,7 @@ I, [2014-12-04T15:12:48.853964 #86734]  INFO -- : EZID DELETE ark:/99999/fk4n58p
 
 Although "EZID imposes no requirements on the presence or form of citation metadata"[*](http://ezid.cdlib.org/doc/apidoc.html#metadata-requirements-mapping), `ezid-client` is intended to support the EZID [reserved metadata elements](http://ezid.cdlib.org/doc/apidoc.html#internal-metadata) and [metadata profiles](http://ezid.cdlib.org/doc/apidoc.html#metadata-profiles). While it is possible to use the client to send and receive any metadata, the object methods are geared towards the defined elements.  Therefore it was seen fit, for example, to map the method `Ezid::Identifier#status` to the "_status" element.  Likewise, all the reserved elements, except for "_crossref", have readers and -- for user-writable elements -- writers without the leading underscores.  Since there are both "_crossref" and "crossref" elements, their accessors match the elements names.  Similarly, accessors for metadata profile elements use underscores in place of dots -- for example, `Ezid::Identifer#dc_title` and `#dc_title=` for the "dc.title" element.
 
-### Setting default metadata values
+**Setting default metadata values**
 
 Default values for new identifiers can be set:
 
