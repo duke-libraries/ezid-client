@@ -20,8 +20,8 @@ module Ezid
     end
 
     # @param method [Symbol] the Net::HTTP constant for the request method
-    # @param uri [URI] the uri 
-    def initialize(method, uri) # path)
+    # @param uri [URI] the uri
+    def initialize(method, uri)
       http_method = Net::HTTP.const_get(method)
       super(http_method.new(uri))
       set_content_type(CONTENT_TYPE, charset: CHARSET)

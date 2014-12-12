@@ -4,19 +4,22 @@ module Ezid
   #
   # EZID client configuration.
   #
-  # Use Ezid::Client.configure to set values.
+  # Use `Ezid::Client.configure` to set values.
   #
   # @api private
+  #
   class Configuration
 
     HOST = "ezid.cdlib.org"
 
     # EZID host name
-    #   Default: "ezid.cdlib.org"
+    #   Default: value of `EZID_HOST` environment variable, if present, or
+    #   the EZID service host "ezid.cdlib.org".
     attr_accessor :host
 
     # Use HTTPS?
-    #   Default: `true`
+    #   Default: `true`, unless `EZID_USE_SSL` environment variable is set
+    #   to the string "false".
     attr_accessor :use_ssl
 
     # EZID user name
@@ -30,16 +33,6 @@ module Ezid
     # Ruby logger instance
     #   Default device: STDERR
     attr_writer :logger
-
-    # Default metadata profile - "erc" (EZID default), "dc", "datacite", or "crossref"
-    # If set, new identifiers (created or minted) will set the "_profile" element to
-    # this value.
-    # attr_accessor :default_metadata_profile
-
-    # Default status - "public" (EZID default), "reserved", or "unavailable"
-    # If set, new identifiers (created or minted) will set the "_status" element to
-    # this value.
-    # attr_accessor :default_status
 
     # Default shoulder for minting (scheme + NAAN + shoulder)
     # @example "ark:/99999/fk4"
