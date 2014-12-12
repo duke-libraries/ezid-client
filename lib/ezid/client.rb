@@ -20,13 +20,13 @@ module Ezid
       def config
         @config ||= Configuration.new
       end
-      
+
       # Yields the configuration to a block
       # @yieldparam [Ezid::Configuration] the configuration
       def configure
         yield config
       end
-    end    
+    end
 
     attr_reader :session, :user, :password # , :host
 
@@ -116,7 +116,7 @@ module Ezid
       end
       handle_response(response, "MINT #{shoulder}")
     end
-    
+
     # @param identifier [String] the identifier to modify
     # @param metadata [String, Hash, Ezid::Metadata] metadata to set
     # @raise [Ezid::Error]
@@ -172,7 +172,7 @@ module Ezid
       def add_metadata(request, metadata)
         return if metadata.nil? || metadata.empty?
         metadata = Metadata.new(metadata) unless metadata.is_a?(Metadata)
-        request.body = metadata.to_anvl(false) 
+        request.body = metadata.to_anvl(false)
       end
 
       def handle_response(response, request_info)

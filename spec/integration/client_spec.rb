@@ -2,7 +2,7 @@ module Ezid
   RSpec.describe Client do
 
     shared_examples "an EZID client" do |client|
-      it "should mint and modify" do      
+      it "should mint and modify" do
         minted = client.mint_identifier(TEST_ARK_SHOULDER, "_status: reserved")
         expect(minted).to be_success
         @id = minted.id
@@ -25,7 +25,7 @@ module Ezid
           expect(client.session).to be_open
         end
       end
-    end    
+    end
 
     describe "authentication" do
       describe "#login" do

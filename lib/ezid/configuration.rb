@@ -22,7 +22,7 @@ module Ezid
     attr_writer :logger
 
     # Default metadata profile - "erc" (EZID default), "dc", "datacite", or "crossref"
-    # If set, new identifiers (created or minted) will set the "_profile" element to 
+    # If set, new identifiers (created or minted) will set the "_profile" element to
     # this value.
     # attr_accessor :default_metadata_profile
 

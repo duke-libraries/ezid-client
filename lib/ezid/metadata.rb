@@ -29,17 +29,17 @@ module Ezid
     UNESCAPE_RE = /%\h\h/
 
     # A comment line
-    COMMENT_RE = /^#.*(\r?\n)?/ 
+    COMMENT_RE = /^#.*(\r?\n)?/
 
     # A line continuation
     LINE_CONTINUATION_RE = /\r?\n\s+/
 
     # A line ending
     LINE_ENDING_RE = /\r?\n/
-    
+
     # A metadata element
     Element = Struct.new(:name, :writer)
-    
+
     # Metadata profiles
     PROFILES = {
       "dc"       => %w( creator title publisher date type ).freeze,
@@ -99,7 +99,7 @@ module Ezid
     def self.define_element_accessors
       elements.each do |accessor, element|
         define_method(accessor) { reader(element.name) }
-      
+
         if element.writer
           define_method("#{accessor}=") { |value| writer(element.name, value) }
         end
@@ -127,7 +127,7 @@ module Ezid
       end
     end
 
-    private_class_method :register_element, :register_elements, :register_reserved_elements, 
+    private_class_method :register_element, :register_elements, :register_reserved_elements,
                          :register_profile_elements, :define_element_accessors
 
     def initialize(data={})
@@ -202,7 +202,7 @@ module Ezid
       def unescape(value)
         value.gsub(UNESCAPE_RE) { |m| URI.decode_www_form_component(m) }
       end
-      
+
       # Coerce a string of metadata (e.g., from EZID host) into a Hash
       # @note EZID host does not send comments or line continuations.
       # @param data [String] the string to coerce

@@ -23,7 +23,7 @@ module Ezid
     RESERVED = "reserved"
     UNAVAILABLE = "unavailable"
 
-    class << self      
+    class << self
       attr_accessor :defaults
 
       # Creates or mints an identifier (depending on arguments)
@@ -80,7 +80,7 @@ module Ezid
       reload
     end
 
-    # Updates the metadata 
+    # Updates the metadata
     # @param attrs [Hash] the metadata
     # @return [Ezid::Identifier] the identifier
     def update_metadata(attrs={})
