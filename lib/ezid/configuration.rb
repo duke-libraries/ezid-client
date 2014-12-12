@@ -48,8 +48,8 @@ module Ezid
     def initialize
       @user = ENV["EZID_USER"]
       @password = ENV["EZID_PASSWORD"]
-      @host = HOST
-      @use_ssl = true
+      @host = ENV["EZID_HOST"] || HOST
+      @use_ssl = ENV["EZID_USE_SSL"] != false.to_s
     end
 
     def logger
