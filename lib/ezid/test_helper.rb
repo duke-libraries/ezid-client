@@ -6,12 +6,15 @@ module Ezid
     TEST_ARK_SHOULDER = "ark:/99999/fk4"
     TEST_DOI_SHOULDER = "doi:10.5072/FK2"
     TEST_USER = "apitest"
+    TEST_HOST = Configuration::HOST
 
     def ezid_test_mode!
       Ezid::Client.configure do |config|
         config.user = TEST_USER
-        # Contact EZID for password
+        # Contact EZID for password, or use your own user name and password
         # config.password = "********"
+        config.host = TEST_HOST
+        config.use_ssl = true
         config.logger = Logger.new(File::NULL)
         config.default_shoulder = TEST_ARK_SHOULDER
       end
@@ -21,4 +24,3 @@ module Ezid
 end
 
 include Ezid::TestHelper
-

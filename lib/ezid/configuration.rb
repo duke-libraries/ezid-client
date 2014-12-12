@@ -9,6 +9,16 @@ module Ezid
   # @api private
   class Configuration
 
+    HOST = "ezid.cdlib.org"
+
+    # EZID host name
+    #   Default: "ezid.cdlib.org"
+    attr_accessor :host
+
+    # Use HTTPS?
+    #   Default: `true`
+    attr_accessor :use_ssl
+
     # EZID user name
     #   Default: value of `EZID_USER` environment variable
     attr_accessor :user
@@ -22,7 +32,7 @@ module Ezid
     attr_writer :logger
 
     # Default metadata profile - "erc" (EZID default), "dc", "datacite", or "crossref"
-    # If set, new identifiers (created or minted) will set the "_profile" element to 
+    # If set, new identifiers (created or minted) will set the "_profile" element to
     # this value.
     # attr_accessor :default_metadata_profile
 
@@ -38,6 +48,8 @@ module Ezid
     def initialize
       @user = ENV["EZID_USER"]
       @password = ENV["EZID_PASSWORD"]
+      @host = ENV["EZID_HOST"] || HOST
+      @use_ssl = ENV["EZID_USE_SSL"] != false.to_s
     end
 
     def logger

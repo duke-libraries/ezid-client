@@ -89,7 +89,7 @@ I, [2014-12-09T11:24:27.039288 #32279]  INFO -- : EZID GET ark:/99999/fk43f4wd4v
 => "http://example.com"
 ```
 
-**Delete** 
+**Delete**
 
 *Identifier status must be "reserved" to delete.* http://ezid.cdlib.org/doc/apidoc.html#operation-delete-identifier
 
@@ -105,7 +105,7 @@ I, [2014-12-04T15:12:48.853964 #86734]  INFO -- : EZID DELETE ark:/99999/fk4n58p
 
 ## Metadata handling
 
-Although "EZID imposes no requirements on the presence or form of citation metadata"[*](http://ezid.cdlib.org/doc/apidoc.html#metadata-requirements-mapping), `ezid-client` is intended to support the EZID [reserved metadata elements](http://ezid.cdlib.org/doc/apidoc.html#internal-metadata) and [metadata profiles](http://ezid.cdlib.org/doc/apidoc.html#metadata-profiles). While it is possible to use the client to send and receive any metadata, the object methods are geared towards the defined elements.  Therefore it was seen fit, for example, to map the method `Ezid::Identifier#status` to the "_status" element.  Likewise, all the reserved elements, except for "_crossref", have readers and -- for user-writable elements -- writers without the leading underscores.  Since there are both "_crossref" and "crossref" elements, their accessors match the elements names.  Similarly, accessors for metadata profile elements use underscores in place of dots -- for example, `Ezid::Identifer#dc_title` and `#dc_title=` for the "dc.title" element.
+Although "EZID imposes no requirements on the presence or form of citation metadata"[*](http://ezid.cdlib.org/doc/apidoc.html#metadata-requirements-mapping), `ezid-client` is intended to support the EZID [reserved metadata elements](http://ezid.cdlib.org/doc/apidoc.html#internal-metadata) and [metadata profiles](http://ezid.cdlib.org/doc/apidoc.html#metadata-profiles). While it is possible to use the client to send and receive any metadata, the object methods are geared towards the defined elements.  Therefore it was seen fit, for example, to map the method `Ezid::Identifier#status` to the `_status` element.  Likewise, all the reserved elements, except for `_crossref`, have readers and -- for user-writable elements -- writers without the leading underscores.  Since there are both `_crossref` and `crossref` elements, their accessors match the elements names.  Similarly, accessors for metadata profile elements use underscores in place of dots -- for example, `Ezid::Identifer#dc_title` and `#dc_title=` for the `dc.title` element.
 
 **Setting default metadata values**
 
@@ -149,10 +149,31 @@ Ezid::Client.configure do |config|
 end
 ```
 
-- At client initialization (only if using Ezid::Client explicity):
+- At client initialization (only if explicitly instantiating `Ezid::Client`):
 
 ```ruby
 client = Ezid::Client.new(user: "eziduser", password: "ezidpass")
+```
+
+## Alternate Host and Disabling SSL
+
+By default Ezid::Client connects over SSL to the EZID host at [ezid.cdlib.org](http://ezid.cdlib.org), but the host and SSL settings may be overridden:
+
+- By setting the `EZID_HOST` environment variable; `EZID_USE_SSL` may be set to the string "false" to disable SSL for all requests.
+
+- Client configuration:
+
+```ruby
+Ezid::Client.configure do |config|
+  config.host = "localhost"
+  config.use_ssl = false
+end
+```
+
+- At client initialization (only if explicitly instantiating `Ezid::Client`):
+
+```ruby
+client = Ezid::Client.new(host: "localhost", use_ssl: false)
 ```
 
 ## Test Helper
@@ -168,12 +189,14 @@ The module provides constants:
 - `TEST_ARK_SHOULDER` => "ark:/99999/fk4"
 - `TEST_DOI_SHOULDER` => "doi:10.5072/FK2"
 - `TEST_USER` => "apitest"
+- `TEST_HOST` => "ezid.cdlib.org"
 
 The test user password is not provided - contact EZID and configure as above - or use your own EZID credentials, since all accounts can mint/create on the test shoulders.
 
 A convenience method `ezid_test_mode!` is provided to configure the client to:
 
 - authenticate as `TEST_USER`
+- use `TEST_HOST` as the host
 - use `TEST_ARK_SHOULDER` as the default shoulder
 - log to the null device (instead of default STDERR)
 

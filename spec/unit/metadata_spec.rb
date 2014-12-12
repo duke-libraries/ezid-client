@@ -1,9 +1,9 @@
 module Ezid
   RSpec.describe Metadata do
-    
+
     describe "reserved elements" do
       describe "readers" do
-        Metadata::RESERVED_ELEMENTS.each do |element|   
+        Metadata::RESERVED_ELEMENTS.each do |element|
           it "should have a reader for '#{element}'" do
             expect(subject).to receive(:reader).with(element)
             reader = (element == "_crossref") ? element : element.sub("_", "")
@@ -29,7 +29,7 @@ module Ezid
             expect(subject).to receive(:writer).with(element, "value")
             writer = ((element == "_crossref") ? element : element.sub("_", "")).concat("=")
             subject.send(writer, "value")
-          end      
+          end
         end
       end
     end
@@ -37,7 +37,7 @@ module Ezid
       Metadata::PROFILES.each do |profile, elements|
         describe "the '#{profile}' metadata profile" do
           describe "readers" do
-            elements.each do |element|            
+            elements.each do |element|
               it "should have a reader for '#{profile}.#{element}'" do
                 expect(subject).to receive(:reader).with("#{profile}.#{element}")
                 subject.send("#{profile}_#{element}")
@@ -45,7 +45,7 @@ module Ezid
             end
           end
           describe "writers" do
-            elements.each do |element|            
+            elements.each do |element|
               it "should have a writer for '#{profile}.#{element}'" do
                 expect(subject).to receive(:writer).with("#{profile}.#{element}", "value")
                 subject.send("#{profile}_#{element}=", "value")
@@ -66,7 +66,7 @@ module Ezid
     end
 
     describe "ANVL output" do
-      let(:elements) do 
+      let(:elements) do
         { "_target" => "http://example.com/path%20with%20spaces",
           "_erc" => "who: Proust, Marcel\nwhat: Remembrance of Things Past",
           "_status" => "public" }
@@ -122,7 +122,7 @@ EOS
         end
       end
       context "of a hash-like object" do
-        let(:hsh) do 
+        let(:hsh) do
           { "_updated" => "1416507086",
             "_target" => "http://ezid.cdlib.org/id/ark:/99999/fk4fn19h87",
             "_profile" => "erc",
