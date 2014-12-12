@@ -9,6 +9,16 @@ module Ezid
   # @api private
   class Configuration
 
+    HOST = "ezid.cdlib.org"
+
+    # EZID host name
+    #   Default: "ezid.cdlib.org"
+    attr_accessor :host
+
+    # Use HTTPS?
+    #   Default: `true`
+    attr_accessor :use_ssl
+
     # EZID user name
     #   Default: value of `EZID_USER` environment variable
     attr_accessor :user
@@ -38,6 +48,8 @@ module Ezid
     def initialize
       @user = ENV["EZID_USER"]
       @password = ENV["EZID_PASSWORD"]
+      @host = HOST
+      @use_ssl = true
     end
 
     def logger
