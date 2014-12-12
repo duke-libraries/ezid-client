@@ -27,7 +27,7 @@ module Ezid
     def closed?
       cookie.nil?
     end
-    
+
     def open?
       !closed?
     end

@@ -3,7 +3,7 @@ module Ezid
 
     describe ".create" do
       let(:attrs) { {shoulder: TEST_ARK_SHOULDER, profile: "dc", target: "http://example.com"} }
-      it "should instantiate a new Identifier and save it" do        
+      it "should instantiate a new Identifier and save it" do
         expect(described_class).to receive(:new).with(attrs).and_call_original
         expect_any_instance_of(described_class).to receive(:save) { double }
         described_class.create(attrs)
@@ -67,7 +67,7 @@ module Ezid
         end
       end
     end
-    
+
     describe "#update" do
       let(:metadata) { {"status" => "unavailable"} }
       subject { described_class.new(id: "id") }
@@ -169,19 +169,19 @@ module Ezid
     describe "boolean status methods" do
       context "when the status is 'public'" do
         before { allow(subject.metadata).to receive(:status) { Identifier::PUBLIC } }
-        it { is_expected.to be_public } 
+        it { is_expected.to be_public }
         it { is_expected.not_to be_reserved }
         it { is_expected.not_to be_unavailable }
       end
       context "when the status is 'reserved'" do
         before { allow(subject.metadata).to receive(:status) { Identifier::RESERVED } }
-        it { is_expected.not_to be_public } 
+        it { is_expected.not_to be_public }
         it { is_expected.to be_reserved }
         it { is_expected.not_to be_unavailable }
       end
       context "when the status is 'unavailable'" do
         before { allow(subject.metadata).to receive(:status) { Identifier::UNAVAILABLE } }
-        it { is_expected.not_to be_public } 
+        it { is_expected.not_to be_public }
         it { is_expected.not_to be_reserved }
         it { is_expected.to be_unavailable }
       end

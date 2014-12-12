@@ -15,7 +15,7 @@ module Ezid
 
     def subsystems
       return {} unless content[1]
-      content[1].split(/\r?\n/).each_with_object({}) do |line, memo| 
+      content[1].split(/\r?\n/).each_with_object({}) do |line, memo|
         subsystem, status = line.split(": ", 2)
         memo[subsystem] = status
       end
