@@ -17,6 +17,12 @@ module Ezid
   #
   class Client
 
+    # ezid-client gem version (e.g., "0.8.0")
+    VERSION = File.read(File.expand_path("../../../VERSION", __FILE__)).chomp
+
+    # EZID API version
+    API_VERSION = "2"
+
     class << self
       # Configuration reader
       def config
@@ -27,6 +33,12 @@ module Ezid
       # @yieldparam [Ezid::Configuration] the configuration
       def configure
         yield config
+      end
+
+      # Verbose version string
+      # @return [String] the version
+      def version
+        "ezid-client #{VERSION} (EZID API Version #{API_VERSION})"
       end
     end
 
