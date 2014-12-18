@@ -42,13 +42,21 @@ I, [2014-12-04T15:06:03.249793 #86655]  INFO -- : EZID GET ark:/99999/fk4rx9d523
 
 A default shoulder can be configured:
 
+- By environment variable (added in v0.9.1):
+
+```sh
+export EZID_DEFAULT_SHOULDER="ark:/99999/fk4"
+```
+
+- By client configuration:
+
 ```ruby
 Ezid::Client.configure do |config|
   config.default_shoulder = "ark:/99999/fk4"
 end
 ```
 
-Then identifiers can minted on the default shoulder:
+New identifiers will then be minted on the default shoulder when a shoulder is not specified:
 
 ```ruby
 >> identifier = Ezid::Identifier.create
@@ -138,7 +146,12 @@ I, [2014-12-09T11:38:38.153546 #32279]  INFO -- : EZID GET ark:/99999/fk4zs2w500
 
 Credentials can be provided in any -- or a combination -- of these ways:
 
-- Environment variables `EZID_USER` and/or `EZID_PASSWORD`;
+- Environment variables:
+
+```sh
+export EZID_USER="eziduser"
+export EZID_PASSWORD="ezidpass"
+```
 
 - Client configuration:
 
@@ -157,9 +170,14 @@ client = Ezid::Client.new(user: "eziduser", password: "ezidpass")
 
 ## Alternate Host and Disabling SSL
 
-By default Ezid::Client connects over SSL to the EZID host at [ezid.cdlib.org](http://ezid.cdlib.org), but the host and SSL settings may be overridden:
+By default `Ezid::Client` connects over SSL to the EZID host at [ezid.cdlib.org](http://ezid.cdlib.org), but the host and SSL settings may be overridden:
 
-- By setting the `EZID_HOST` environment variable; `EZID_USE_SSL` may be set to the string "false" to disable SSL for all requests.
+- By environment variables:
+
+```sh
+export EZID_HOST="localhost"
+export EZID_USE_SSL="false" # "false" disables SSL for all requests
+```
 
 - Client configuration:
 
