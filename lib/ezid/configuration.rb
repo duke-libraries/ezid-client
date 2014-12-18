@@ -39,10 +39,11 @@ module Ezid
     attr_accessor :default_shoulder
 
     def initialize
-      @user = ENV["EZID_USER"]
-      @password = ENV["EZID_PASSWORD"]
-      @host = ENV["EZID_HOST"] || HOST
-      @use_ssl = ENV["EZID_USE_SSL"] != false.to_s
+      @user             = ENV["EZID_USER"]
+      @password         = ENV["EZID_PASSWORD"]
+      @host             = ENV["EZID_HOST"] || HOST
+      @use_ssl          = ENV["EZID_USE_SSL"] != false.to_s
+      @default_shoulder = ENV["EZID_DEFAULT_SHOULDER"]
     end
 
     def logger
