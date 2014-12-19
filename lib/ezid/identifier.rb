@@ -126,10 +126,11 @@ module Ezid
     end
 
     # Deletes the identifier from EZID
+    # @see http://ezid.cdlib.org/doc/apidoc.html#operation-delete-identifier
     # @return [Ezid::Identifier] the identifier
     # @raise [Ezid::Error]
     def delete
-      raise Error, "Status must be \"reserved\" to delete (status: \"#{status}\")." unless reserved?
+      raise Error, "Only persisted, reserved identifiers may be deleted: #{inspect}." unless deletable?
       client.delete_identifier(id)
       @deleted = true
       reset
@@ -150,7 +151,29 @@ module Ezid
     # Is the identifier unavailable?
     # @return [Boolean]
     def unavailable?
-      status == UNAVAILABLE
+      status =~ /^#{UNAVAILABLE}/
+    end
+
+    # Is the identifier deletable?
+    # @return [Boolean]
+    def deletable?
+      persisted? && reserved?
+    end
+
+    # Mark the identifier as unavailable
+    # @param reason [String] an optional reason 
+    # @return [String] the new status
+    def unavailable!(reason = nil)
+      raise Error, "Cannot make a reserved identifier unavailable." if persisted? && reserved?
+      value = UNAVAILABLE
+      value << " | #{reason}" if reason
+      self.status = value
+    end
+
+    # Mark the identifier as public
+    # @return [String] the new status
+    def public!
+      self.status = PUBLIC
     end
 
     private
