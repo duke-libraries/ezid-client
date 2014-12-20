@@ -108,7 +108,7 @@ module Ezid
       context "when id and `created' are present" do
         before do
           allow(subject).to receive(:id) { "ark:/99999/fk4fn19h88" }
-          allow(subject.metadata).to receive(:created) { Time.at(1416507086) }
+          subject.metadata["_created"] = "1416507086"
         end
         it "should be true" do
           expect(subject).to be_persisted
@@ -185,26 +185,26 @@ module Ezid
 
     describe "boolean status methods" do
       context "when the identifier is public" do
-        before { allow(subject.metadata).to receive(:status) { Identifier::PUBLIC } }
+        before { subject.public! }
         it { is_expected.to be_public }
         it { is_expected.not_to be_reserved }
         it { is_expected.not_to be_unavailable }
       end
       context "when the identifier is reserved" do
-        before { allow(subject.metadata).to receive(:status) { Identifier::RESERVED } }
+        before { subject.status = Identifier::RESERVED }
         it { is_expected.not_to be_public }
         it { is_expected.to be_reserved }
         it { is_expected.not_to be_unavailable }
       end
       context "when the identifier is unavailable" do
         context "and it has no reason" do
-          before { allow(subject.metadata).to receive(:status) { Identifier::UNAVAILABLE } }
+          before { subject.unavailable! }
           it { is_expected.not_to be_public }
           it { is_expected.not_to be_reserved }
           it { is_expected.to be_unavailable }
         end
         context "and it has a reason" do
-          before { allow(subject.metadata).to receive(:status) { "#{Identifier::UNAVAILABLE} | withdrawn" } }
+          before { subject.unavailable!("withdrawn") }
           it { is_expected.not_to be_public }
           it { is_expected.not_to be_reserved }
           it { is_expected.to be_unavailable }

@@ -1,9 +1,8 @@
 require "delegate"
-require "singleton"
 
 module Ezid
   #
-  # EZID metadata collection for an identifier
+  # EZID metadata collection for an identifier.
   #
   # @note Although this API is not private, its direct use is discouraged.
   #   Instead use the metadata element accessors through Ezid::Identifier.
@@ -64,71 +63,53 @@ module Ezid
     # @see http://ezid.cdlib.org/doc/apidoc.html#internal-metadata
     RESERVED_ELEMENTS = RESERVED_READONLY_ELEMENTS + RESERVED_READWRITE_ELEMENTS
 
-    # Metadata element registry
-    class ElementRegistry < SimpleDelegator
-      include Singleton
-
-      def initialize
-        super(Hash.new)
-      end
-
-      def readers
-        keys
-      end
-
-      def writers
-        keys.select { |k| self[k].writer }.map(&:to_s).map { |k| k.concat("=") }.map(&:to_sym)
-      end
-    end
-
     def self.initialize!
       register_elements
-      define_element_accessors
     end
 
-    def self.elements
-      ElementRegistry.instance
+    def self.registered_elements
+      @@registered_elements ||= {}
     end
 
     def self.register_elements
       register_profile_elements
       register_reserved_elements
-      elements.freeze
     end
 
-    def self.define_element_accessors
-      elements.each do |accessor, element|
-        define_method(accessor) { reader(element.name) }
-
-        if element.writer
-          define_method("#{accessor}=") { |value| writer(element.name, value) }
-        end
+    def self.register_element(accessor, opts={})
+      if element = registered_elements[accessor.to_sym]
+        raise Error, "Element \"#{element.name}\" already registered under key :#{accessor}"
       end
-    end
-
-    def self.register_element(accessor, element, opts={})
       writer = opts.fetch(:writer, true)
-      elements[accessor] = Element.new(element, writer).freeze
+      name = opts.fetch(:name, accessor.to_s)
+      registered_elements[accessor.to_sym] = Element.new(name, writer).freeze
     end
 
-    def self.register_profile_elements
-      PROFILES.each do |profile, profile_elements|
-        profile_elements.each do |element|
-          register_element("#{profile}_#{element}".to_sym, "#{profile}.#{element}")
+    def self.register_profile_element(profile, element)
+      register_element("#{profile}_#{element}", name: "#{profile}.#{element}")
+    end
+
+    def self.register_profile_elements(profile = nil)
+      if profile
+        PROFILES[profile].each { |element| register_profile_element(profile, element) }
+      else
+        PROFILES.keys.each do |profile|
+          register_profile_elements(profile)
+          register_element(profile) unless profile == "dc"
         end
-        register_element(profile.to_sym, profile) unless profile == "dc"
       end
     end
 
     def self.register_reserved_elements
       RESERVED_ELEMENTS.each do |element|
-        accessor = ((element == "_crossref") ? element : element.sub("_", "")).to_sym
-        register_element(accessor, element, writer: RESERVED_READWRITE_ELEMENTS.include?(element))
+        accessor = (element == "_crossref") ? element : element.sub("_", "")
+        register_element(accessor, name: element, writer: RESERVED_READWRITE_ELEMENTS.include?(element))
       end
     end
 
-    private_class_method :register_element, :register_elements, :register_reserved_elements,
-                         :register_profile_elements, :define_element_accessors
+    private_class_method :register_elements,
+                         :register_reserved_elements,
+                         :register_profile_elements
 
     def initialize(data={})
       super(coerce(data))
@@ -147,7 +128,27 @@ module Ezid
       to_anvl
     end
 
+    def registered_elements
+      self.class.registered_elements
+    end
+
+    protected
+
+      def method_missing(method, *args)
+        return registered_reader(method) if registered_reader?(method, *args)
+        return registered_writer(method, *args) if registered_writer?(method, *args)
+        super
+      end
+
     private
+
+      def registered_reader?(accessor, *args)
+        args.empty? && registered_elements.include?(accessor)
+      end
+
+      def registered_reader(accessor)
+        reader registered_elements[accessor].name
+      end
 
       def reader(element)
         value = self[element]
@@ -156,6 +157,17 @@ module Ezid
           value = (time == 0) ? nil : Time.at(time).utc
         end
         value
+      end
+
+      def registered_writer?(method, *args)
+        return false unless method.to_s.end_with?("=") && args.size == 1
+        accessor = method.to_s.sub("=", "").to_sym
+        registered_elements.include?(accessor) && registered_elements[accessor].writer
+      end
+
+      def registered_writer(method, *args)
+        accessor = method.to_s.sub("=", "").to_sym
+        writer(registered_elements[accessor].name, *args)
       end
 
       def writer(element, value)
