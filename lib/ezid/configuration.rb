@@ -54,5 +54,9 @@ module Ezid
       Identifier
     end
 
+    def metadata
+      Metadata
+    end
+
   end
 end

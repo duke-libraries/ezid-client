@@ -113,7 +113,43 @@ I, [2014-12-04T15:12:48.853964 #86734]  INFO -- : EZID DELETE ark:/99999/fk4n58p
 
 ## Metadata handling
 
-Although "EZID imposes no requirements on the presence or form of citation metadata"[*](http://ezid.cdlib.org/doc/apidoc.html#metadata-requirements-mapping), `ezid-client` is intended to support the EZID [reserved metadata elements](http://ezid.cdlib.org/doc/apidoc.html#internal-metadata) and [metadata profiles](http://ezid.cdlib.org/doc/apidoc.html#metadata-profiles). While it is possible to use the client to send and receive any metadata, the object methods are geared towards the defined elements.  Therefore it was seen fit, for example, to map the method `Ezid::Identifier#status` to the `_status` element.  Likewise, all the reserved elements, except for `_crossref`, have readers and -- for user-writable elements -- writers without the leading underscores.  Since there are both `_crossref` and `crossref` elements, their accessors match the elements names.  Similarly, accessors for metadata profile elements use underscores in place of dots -- for example, `Ezid::Identifer#dc_title` and `#dc_title=` for the `dc.title` element.
+In order to ease metadata management access to EZID [reserved metadata elements](http://ezid.cdlib.org/doc/apidoc.html#internal-metadata) and [metadata profiles](http://ezid.cdlib.org/doc/apidoc.html#metadata-profiles) is provided through `#method_missing` according to these heuristics:
+
+**Reserved elements** can be read and written using the name of the element without the leading underscore:
+
+```ruby
+>> identifier.status                 # reads "_status" element
+=> "public"
+>> identifier.status = "unavailable" # writes "_status" element
+=> "unavailable"
+```
+
+Notes:
+- `_crossref` is an exception because `crossref` is also the name of a metadata profile and a special element.  Use `identifier._crossref` to read and `identifier._crossref = value` to write.
+- Reserved elements which are not user-writeable do not implement writers.
+- Special readers are implemented for reserved elements having date/time values -- `_created` and `_updated` -- which convert the string time values of EZID to Ruby `Time` instances.
+
+**Metadata profile elements** can be read and written using the name of the element, replacing the dot (".") with an underscore:
+
+```ruby
+>> identifier.dc_type           # reads "dc.type" element
+=> "Collection"
+>> identifier.dc_type = "Image" # writes "dc.type" element
+=> "Image"
+```
+
+**Registering custom metadata elements**
+
+Custom metadata element accessors can be created by a registration process:
+
+```ruby
+Ezid::Client.configure do |config|
+  # register the element "custom"
+  config.metadata.register_element :custom
+  # register the element "dc.identifier" under the accessor :dc_identifier
+  config.metadata.register_element :dc_identifier, name: "dc.identifier"
+end
+```
 
 **Setting default metadata values**
 

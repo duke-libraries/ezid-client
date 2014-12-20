@@ -33,6 +33,7 @@ module Ezid
         end
       end
     end
+
     describe "metadata profiles" do
       Metadata::PROFILES.each do |profile, elements|
         describe "the '#{profile}' metadata profile" do
@@ -62,6 +63,22 @@ module Ezid
             subject.send("#{profile}=", "value")
           end
         end
+      end
+    end
+
+    describe "custom element" do
+      let(:element) { Metadata::Element.new("custom", true) }
+      before do
+        allow(subject.registered_elements).to receive(:include?).with(:custom) { true } 
+        allow(subject.registered_elements).to receive(:[]).with(:custom) { element } 
+      end
+      it "should have a reader" do
+        expect(subject).to receive(:reader).with("custom")
+        subject.custom
+      end
+      it "should have a writer" do
+        expect(subject).to receive(:writer).with("custom", "value")
+        subject.custom = "value"
       end
     end
 
