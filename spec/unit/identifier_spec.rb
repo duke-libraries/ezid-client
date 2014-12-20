@@ -108,7 +108,7 @@ module Ezid
       context "when id and `created' are present" do
         before do
           allow(subject).to receive(:id) { "ark:/99999/fk4fn19h88" }
-          allow(subject.metadata).to receive(:created) { Time.at(1416507086) }
+          subject.metadata["_created"] = "1416507086"
         end
         it "should be true" do
           expect(subject).to be_persisted
@@ -117,11 +117,28 @@ module Ezid
     end
 
     describe "#delete" do
-      subject { described_class.new(id: "id", status: "reserved") }
-      it "should delete the identifier" do
-        expect(subject.client).to receive(:delete_identifier).with("id") { double(id: "id") }
-        subject.delete
-        expect(subject).to be_deleted
+      context "when the identifier is reserved" do
+        subject { described_class.new(id: "id", status: Identifier::RESERVED) }
+        context "and is persisted" do
+          before { allow(subject).to receive(:persisted?) { true } }
+          it "should delete the identifier" do
+            expect(subject.client).to receive(:delete_identifier).with("id") { double(id: "id") }
+            subject.delete
+            expect(subject).to be_deleted
+          end          
+        end
+        context "and is not persisted" do
+          before { allow(subject).to receive(:persisted?) { false } }
+          it "should raise an exception" do
+            expect { subject.delete }.to raise_error
+          end
+        end
+      end
+      context "when identifier is not reserved" do
+        subject { described_class.new(id: "id", status: Identifier::PUBLIC) }
+        it "should raise an exception" do
+          expect { subject.delete }.to raise_error
+        end
       end
     end
 
@@ -167,23 +184,70 @@ module Ezid
     end
 
     describe "boolean status methods" do
-      context "when the status is 'public'" do
-        before { allow(subject.metadata).to receive(:status) { Identifier::PUBLIC } }
+      context "when the identifier is public" do
+        before { subject.public! }
         it { is_expected.to be_public }
         it { is_expected.not_to be_reserved }
         it { is_expected.not_to be_unavailable }
       end
-      context "when the status is 'reserved'" do
-        before { allow(subject.metadata).to receive(:status) { Identifier::RESERVED } }
+      context "when the identifier is reserved" do
+        before { subject.status = Identifier::RESERVED }
         it { is_expected.not_to be_public }
         it { is_expected.to be_reserved }
         it { is_expected.not_to be_unavailable }
       end
-      context "when the status is 'unavailable'" do
-        before { allow(subject.metadata).to receive(:status) { Identifier::UNAVAILABLE } }
-        it { is_expected.not_to be_public }
-        it { is_expected.not_to be_reserved }
-        it { is_expected.to be_unavailable }
+      context "when the identifier is unavailable" do
+        context "and it has no reason" do
+          before { subject.unavailable! }
+          it { is_expected.not_to be_public }
+          it { is_expected.not_to be_reserved }
+          it { is_expected.to be_unavailable }
+        end
+        context "and it has a reason" do
+          before { subject.unavailable!("withdrawn") }
+          it { is_expected.not_to be_public }
+          it { is_expected.not_to be_reserved }
+          it { is_expected.to be_unavailable }
+        end
+      end
+    end
+
+    describe "status-changing methods" do
+      describe "#unavailable!" do
+        context "when the identifier is reserved" do
+          subject { described_class.new(id: "id", status: Identifier::RESERVED) }
+          context "and persisted" do
+            before { allow(subject).to receive(:persisted?) { true } }
+            it "should raise an exception" do
+              expect { subject.unavailable! }.to raise_error
+            end
+          end
+          context "and not persisted" do
+            before { allow(subject).to receive(:persisted?) { false } }
+            it "should changed the status" do
+              expect { subject.unavailable! }.to change(subject, :status).from(Identifier::RESERVED).to(Identifier::UNAVAILABLE)
+            end
+          end
+        end
+        context "when the identifier is public" do
+          subject { described_class.new(id: "id", status: Identifier::PUBLIC) }
+          context "and no reason is given" do
+            it "should change the status" do
+              expect { subject.unavailable! }.to change(subject, :status).from(Identifier::PUBLIC).to(Identifier::UNAVAILABLE)
+            end
+          end
+          context "and a reason is given" do
+            it "should change the status and append the reason" do
+              expect { subject.unavailable!("withdrawn") }.to change(subject, :status).from(Identifier::PUBLIC).to("#{Identifier::UNAVAILABLE} | withdrawn")
+            end
+          end
+        end
+      end
+      describe "#public!" do
+        subject { described_class.new(id: "id", status: Identifier::UNAVAILABLE) }
+        it "should change the status" do
+          expect { subject.public! }.to change(subject, :status).from(Identifier::UNAVAILABLE).to(Identifier::PUBLIC)
+        end
       end
     end
 

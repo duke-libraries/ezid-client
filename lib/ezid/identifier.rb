@@ -1,19 +1,15 @@
-require "forwardable"
-
 module Ezid
   #
   # Represents an EZID identifier as a resource.
   #
+  # Ezid::Identifier delegates access to registered metadata elements through #method_missing.
+  #
   # @api public
   #
   class Identifier
-    extend Forwardable
 
     attr_reader :id, :client
     attr_accessor :shoulder, :metadata
-
-    def_delegators :metadata, *(Metadata.elements.readers)
-    def_delegators :metadata, *(Metadata.elements.writers)
 
     # Attributes to display on inspect
     INSPECT_ATTRS = %w( id status target created )
@@ -126,10 +122,11 @@ module Ezid
     end
 
     # Deletes the identifier from EZID
+    # @see http://ezid.cdlib.org/doc/apidoc.html#operation-delete-identifier
     # @return [Ezid::Identifier] the identifier
     # @raise [Ezid::Error]
     def delete
-      raise Error, "Status must be \"reserved\" to delete (status: \"#{status}\")." unless reserved?
+      raise Error, "Only persisted, reserved identifiers may be deleted: #{inspect}." unless deletable?
       client.delete_identifier(id)
       @deleted = true
       reset
@@ -150,40 +147,71 @@ module Ezid
     # Is the identifier unavailable?
     # @return [Boolean]
     def unavailable?
-      status == UNAVAILABLE
+      status =~ /^#{UNAVAILABLE}/
     end
+
+    # Is the identifier deletable?
+    # @return [Boolean]
+    def deletable?
+      persisted? && reserved?
+    end
+
+    # Mark the identifier as unavailable
+    # @param reason [String] an optional reason 
+    # @return [String] the new status
+    def unavailable!(reason = nil)
+      raise Error, "Cannot make a reserved identifier unavailable." if persisted? && reserved?
+      value = UNAVAILABLE
+      value << " | #{reason}" if reason
+      self.status = value
+    end
+
+    # Mark the identifier as public
+    # @return [String] the new status
+    def public!
+      self.status = PUBLIC
+    end
+
+    protected
+
+      def method_missing(method, *args)
+        metadata.send(method, *args)
+      rescue NoMethodError
+        super
+      end
 
     private
 
-    def refresh_metadata
-      response = client.get_identifier_metadata(id)
-      @metadata = Metadata.new(response.metadata)
-    end
+      def refresh_metadata
+        response = client.get_identifier_metadata(id)
+        @metadata = Metadata.new(response.metadata)
+      end
 
-    def clear_metadata
-      @metadata.clear
-    end
+      def clear_metadata
+        @metadata.clear
+      end
 
-    def modify
-      client.modify_identifier(id, metadata)
-    end
+      def modify
+        client.modify_identifier(id, metadata)
+      end
 
-    def create_or_mint
-      id ? create : mint
-    end
+      def create_or_mint
+        id ? create : mint
+      end
 
-    def mint
-      response = client.mint_identifier(shoulder, metadata)
-      @id = response.id
-    end
+      def mint
+        response = client.mint_identifier(shoulder, metadata)
+        @id = response.id
+      end
 
-    def create
-      client.create_identifier(id, metadata)
-    end
+      def create
+        client.create_identifier(id, metadata)
+      end
 
-    def init_metadata(args)
-      @metadata = Metadata.new(args.delete(:metadata))
-      update_metadata(self.class.defaults.merge(args))
-    end
+      def init_metadata(args)
+        @metadata = Metadata.new(args.delete(:metadata))
+        update_metadata(self.class.defaults.merge(args))
+      end
+
   end
 end
