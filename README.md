@@ -113,7 +113,7 @@ I, [2014-12-04T15:12:48.853964 #86734]  INFO -- : EZID DELETE ark:/99999/fk4n58p
 
 ## Metadata handling
 
-In order to ease metadata management access to EZID [reserved metadata elements](http://ezid.cdlib.org/doc/apidoc.html#internal-metadata) and [metadata profiles](http://ezid.cdlib.org/doc/apidoc.html#metadata-profiles) is provided through `#method_missing` according to these heuristics:
+Accessors are provided to ease the use of EZID [reserved metadata elements](http://ezid.cdlib.org/doc/apidoc.html#internal-metadata) and [metadata profiles](http://ezid.cdlib.org/doc/apidoc.html#metadata-profiles):
 
 **Reserved elements** can be read and written using the name of the element without the leading underscore:
 
