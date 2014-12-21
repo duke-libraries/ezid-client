@@ -68,10 +68,8 @@ module Ezid
 
     describe "custom element" do
       let(:element) { Metadata::Element.new("custom", true) }
-      before do
-        allow(subject.registered_elements).to receive(:include?).with(:custom) { true } 
-        allow(subject.registered_elements).to receive(:[]).with(:custom) { element } 
-      end
+      before { described_class.register_element :custom }
+      after { described_class.send(:unregister_element, :custom) }
       it "should have a reader" do
         expect(subject).to receive(:reader).with("custom")
         subject.custom

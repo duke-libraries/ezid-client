@@ -37,7 +37,7 @@ module Ezid
     LINE_ENDING_RE = /\r?\n/
 
     # A metadata element
-    Element = Struct.new(:name, :writer)
+    Element = Struct.new(:name, :reader, :writer)
 
     # Metadata profiles
     PROFILES = {
@@ -78,11 +78,19 @@ module Ezid
 
     def self.register_element(accessor, opts={})
       if element = registered_elements[accessor.to_sym]
-        raise Error, "Element \"#{element.name}\" already registered under key :#{accessor}"
+        raise Error, "Element \"#{element.name}\" is registered under the accessor :#{accessor}."
       end
-      writer = opts.fetch(:writer, true)
-      name = opts.fetch(:name, accessor.to_s)
-      registered_elements[accessor.to_sym] = Element.new(name, writer).freeze
+      element = Element.new(opts.fetch(:name, accessor.to_s))
+      element.reader = define_reader(accessor, element.name)
+      element.writer = define_writer(accessor, element.name) if opts.fetch(:writer, true)
+      registered_elements[accessor.to_sym] = element
+    end
+
+    def self.unregister_element(accessor)
+      element = registered_elements.delete(accessor)
+      raise Error, "No element is registered under the accessor :#{accessor}." unless element
+      remove_method(element.reader)
+      remove_method(element.writer) if element.writer
     end
 
     def self.register_profile_element(profile, element)
@@ -107,9 +115,24 @@ module Ezid
       end
     end
 
+    def self.define_reader(accessor, element)
+      define_method(accessor) do
+        reader(element)
+      end
+    end
+
+    def self.define_writer(accessor, element)
+      define_method("#{accessor}=") do |value|
+        writer(element, value)
+      end
+    end
+
     private_class_method :register_elements,
                          :register_reserved_elements,
-                         :register_profile_elements
+                         :register_profile_elements,
+                         :unregister_element,
+                         :define_reader,
+                         :define_writer
 
     def initialize(data={})
       super(coerce(data))
@@ -132,23 +155,7 @@ module Ezid
       self.class.registered_elements
     end
 
-    protected
-
-      def method_missing(method, *args)
-        return registered_reader(method) if registered_reader?(method, *args)
-        return registered_writer(method, *args) if registered_writer?(method, *args)
-        super
-      end
-
     private
-
-      def registered_reader?(accessor, *args)
-        args.empty? && registered_elements.include?(accessor)
-      end
-
-      def registered_reader(accessor)
-        reader registered_elements[accessor].name
-      end
 
       def reader(element)
         value = self[element]
@@ -157,17 +164,6 @@ module Ezid
           value = (time == 0) ? nil : Time.at(time).utc
         end
         value
-      end
-
-      def registered_writer?(method, *args)
-        return false unless method.to_s.end_with?("=") && args.size == 1
-        accessor = method.to_s.sub("=", "").to_sym
-        registered_elements.include?(accessor) && registered_elements[accessor].writer
-      end
-
-      def registered_writer(method, *args)
-        accessor = method.to_s.sub("=", "").to_sym
-        writer(registered_elements[accessor].name, *args)
       end
 
       def writer(element, value)
