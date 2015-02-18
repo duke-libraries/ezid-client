@@ -17,6 +17,10 @@ module Ezid
     #   the EZID service host "ezid.cdlib.org".
     attr_accessor :host
 
+    # EZID TCP/IP port
+    #   Default: value of `EZID_PORT` variable
+    attr_accessor :port
+
     # Use HTTPS?
     #   Default: `true`, unless `EZID_USE_SSL` environment variable is set
     #   to the string "false".
@@ -41,8 +45,9 @@ module Ezid
     def initialize
       @user             = ENV["EZID_USER"]
       @password         = ENV["EZID_PASSWORD"]
-      @host             = ENV["EZID_HOST"] || HOST
       @use_ssl          = ENV["EZID_USE_SSL"] != false.to_s
+      @host             = ENV["EZID_HOST"] || HOST
+      @port             = ENV["EZID_PORT"]
       @default_shoulder = ENV["EZID_DEFAULT_SHOULDER"]
     end
 

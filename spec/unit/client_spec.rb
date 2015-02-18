@@ -15,8 +15,7 @@ module Ezid
       let(:id) { "ark:/99999/fk4fn19h88" }
       let(:http_response) { double(body: "success: ark:/99999/fk4fn19h88") }
       before do
-        allow(subject).to receive(:build_uri).with("/id/#{id}") { stub_uri }
-        allow(Request).to receive(:execute).with(:Put, stub_uri) { stub_response }
+        allow(Requests::CreateIdentifierRequest).to receive(:execute).with(subject, id, nil) { stub_response }
       end
       it "should be a success" do
         response = subject.create_identifier(id)
@@ -27,13 +26,10 @@ module Ezid
 
     describe "#mint_identifier" do
       before do
-        allow(Request).to receive(:execute).with(:Post, stub_uri) { stub_response }
+        allow(Requests::MintIdentifierRequest).to receive(:execute).with(subject, TEST_ARK_SHOULDER, nil) { stub_response }
       end
       describe "which is an ARK" do
         let(:http_response) { double(body: "success: ark:/99999/fk4fn19h88") }
-        before do
-          allow(subject).to receive(:build_uri).with("/shoulder/#{TEST_ARK_SHOULDER}") { stub_uri }
-        end
         it "should be a success" do
           response = subject.mint_identifier(TEST_ARK_SHOULDER)
           expect(response).to be_success
@@ -52,7 +48,7 @@ datacite.resourcetype: Other
 EOS
         end
         before do
-          allow(subject).to receive(:build_uri).with("/shoulder/#{TEST_DOI_SHOULDER}") { stub_uri }
+          allow(Requests::MintIdentifierRequest).to receive(:execute).with(subject, TEST_DOI_SHOULDER, metadata) { stub_response }
         end
         it "should be a sucess" do
           response = subject.mint_identifier(TEST_DOI_SHOULDER, metadata)
@@ -65,7 +61,7 @@ EOS
         let(:http_response) { double(body: "success: ark:/99999/fk4fn19h88") }
         context "and the :default_shoulder config option is set" do
           before do
-            allow(subject).to receive(:build_uri).with("/shoulder/#{TEST_ARK_SHOULDER}") { stub_uri }
+            allow(Requests::MintIdentifierRequest).to receive(:execute).with(subject, TEST_ARK_SHOULDER, nil) { stub_response } 
             allow(Client.config).to receive(:default_shoulder) { TEST_ARK_SHOULDER }
           end
           it "should use the default shoulder" do
@@ -99,8 +95,7 @@ EOS
                                      )
       end
       before do
-        allow(subject).to receive(:build_uri).with("/id/#{id}") { stub_uri }
-        allow(Request).to receive(:execute).with(:Get, stub_uri) { stub_response }
+        allow(Requests::GetIdentifierMetadataRequest).to receive(:execute).with(subject, id) { stub_response }
       end
       it "should retrieve the metadata" do
         response = subject.get_identifier_metadata(id)
@@ -119,6 +114,7 @@ EOS
     end
 
     describe "server status" do
+      let(:stub_response) { Status.new(Response.new(http_response)) }
       let(:http_response) do
         double(body: <<-EOS
 success: EZID is up
@@ -128,8 +124,7 @@ EOS
                )
       end
       before do
-        allow(subject).to receive(:build_uri).with("/status?subsystems=*") { stub_uri }
-        allow(Request).to receive(:execute).with(:Get, stub_uri) { stub_response }
+        allow(Requests::ServerStatusRequest).to receive(:execute).with(subject, "*") { stub_response }
       end
       it "should report the status of EZID and subsystems" do
         response = subject.server_status("*")
