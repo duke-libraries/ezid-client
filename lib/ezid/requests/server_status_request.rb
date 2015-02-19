@@ -1,10 +1,16 @@
 require_relative "request"
-require_relative "../responses/status_response"
+require_relative "../responses/server_status_response"
 
 module Ezid
+  #
+  # A request for the EZID server status
+  # @api private
+  #
   class ServerStatusRequest < Request
+
     self.http_method = GET
     self.path = "/status"
+    self.response_class = ServerStatusResponse
 
     attr_reader :subsystems
 
@@ -21,8 +27,5 @@ module Ezid
       false
     end
 
-    def response_class
-      StatusResponse
-    end
   end
 end

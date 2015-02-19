@@ -25,7 +25,7 @@ module Ezid
     DELETE = Net::HTTP::Delete
 
     class << self
-      attr_accessor :http_method, :path
+      attr_accessor :http_method, :path, :response_class
 
       def execute(client, *args)
         request = new(client, *args)
@@ -50,7 +50,7 @@ module Ezid
     # Executes the request and returns the response
     # @return [Ezid::Response] the response
     def execute
-      handle_response(get_response_for_request)
+      response_class.new(get_response_for_request)
     end
 
     # The request URI
@@ -68,7 +68,7 @@ module Ezid
     # Class to wrap Net::HTTPResponse
     # @return [Class]
     def response_class
-      Response
+      self.class.response_class || Response
     end
 
     # HTTP request query string

@@ -1,9 +1,6 @@
 module Ezid
   RSpec.describe Client do
 
-    let(:stub_response) { Response.new(http_response) }
-    let(:stub_uri) { double }
-
     describe "initialization without a block" do
       it "should not login" do
         expect_any_instance_of(described_class).not_to receive(:login)
@@ -14,6 +11,7 @@ module Ezid
     describe "#create_identifier" do
       let(:id) { "ark:/99999/fk4fn19h88" }
       let(:http_response) { double(body: "success: ark:/99999/fk4fn19h88") }
+      let(:stub_response) { CreateIdentifierResponse.new(http_response) }
       before do
         allow(CreateIdentifierRequest).to receive(:execute).with(subject, id, nil) { stub_response }
       end
@@ -25,6 +23,7 @@ module Ezid
     end
 
     describe "#mint_identifier" do
+      let(:stub_response) { MintIdentifierResponse.new(http_response) }
       before do
         allow(MintIdentifierRequest).to receive(:execute).with(subject, TEST_ARK_SHOULDER, nil) { stub_response }
       end
@@ -94,6 +93,7 @@ _status: public
 EOS
                                      )
       end
+      let(:stub_response) { GetIdentifierMetadataResponse.new(http_response) }
       before do
         allow(GetIdentifierMetadataRequest).to receive(:execute).with(subject, id) { stub_response }
       end
@@ -114,7 +114,7 @@ EOS
     end
 
     describe "server status" do
-      let(:stub_response) { Status.new(Response.new(http_response)) }
+      let(:stub_response) { ServerStatusResponse.new(http_response) }
       let(:http_response) do
         double(body: <<-EOS
 success: EZID is up
