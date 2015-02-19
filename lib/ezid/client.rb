@@ -1,13 +1,14 @@
 require "net/http"
 
 require_relative "configuration"
-require_relative "requests"
 require_relative "response"
 require_relative "session"
 require_relative "metadata"
 require_relative "identifier"
 require_relative "error"
-require_relative "status"
+require_relative "status_response"
+
+Dir[File.expand_path("../requests/*.rb", __FILE__)].each { |m| require m }
 
 module Ezid
   #
@@ -16,8 +17,6 @@ module Ezid
   # @api public
   #
   class Client
-
-    include Requests
 
     # ezid-client gem version (e.g., "0.8.0")
     VERSION = File.read(File.expand_path("../../../VERSION", __FILE__)).chomp

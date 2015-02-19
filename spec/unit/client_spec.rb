@@ -15,7 +15,7 @@ module Ezid
       let(:id) { "ark:/99999/fk4fn19h88" }
       let(:http_response) { double(body: "success: ark:/99999/fk4fn19h88") }
       before do
-        allow(Requests::CreateIdentifierRequest).to receive(:execute).with(subject, id, nil) { stub_response }
+        allow(CreateIdentifierRequest).to receive(:execute).with(subject, id, nil) { stub_response }
       end
       it "should be a success" do
         response = subject.create_identifier(id)
@@ -26,7 +26,7 @@ module Ezid
 
     describe "#mint_identifier" do
       before do
-        allow(Requests::MintIdentifierRequest).to receive(:execute).with(subject, TEST_ARK_SHOULDER, nil) { stub_response }
+        allow(MintIdentifierRequest).to receive(:execute).with(subject, TEST_ARK_SHOULDER, nil) { stub_response }
       end
       describe "which is an ARK" do
         let(:http_response) { double(body: "success: ark:/99999/fk4fn19h88") }
@@ -48,7 +48,7 @@ datacite.resourcetype: Other
 EOS
         end
         before do
-          allow(Requests::MintIdentifierRequest).to receive(:execute).with(subject, TEST_DOI_SHOULDER, metadata) { stub_response }
+          allow(MintIdentifierRequest).to receive(:execute).with(subject, TEST_DOI_SHOULDER, metadata) { stub_response }
         end
         it "should be a sucess" do
           response = subject.mint_identifier(TEST_DOI_SHOULDER, metadata)
@@ -61,7 +61,7 @@ EOS
         let(:http_response) { double(body: "success: ark:/99999/fk4fn19h88") }
         context "and the :default_shoulder config option is set" do
           before do
-            allow(Requests::MintIdentifierRequest).to receive(:execute).with(subject, TEST_ARK_SHOULDER, nil) { stub_response } 
+            allow(MintIdentifierRequest).to receive(:execute).with(subject, TEST_ARK_SHOULDER, nil) { stub_response } 
             allow(Client.config).to receive(:default_shoulder) { TEST_ARK_SHOULDER }
           end
           it "should use the default shoulder" do
@@ -95,7 +95,7 @@ EOS
                                      )
       end
       before do
-        allow(Requests::GetIdentifierMetadataRequest).to receive(:execute).with(subject, id) { stub_response }
+        allow(GetIdentifierMetadataRequest).to receive(:execute).with(subject, id) { stub_response }
       end
       it "should retrieve the metadata" do
         response = subject.get_identifier_metadata(id)
@@ -124,7 +124,7 @@ EOS
                )
       end
       before do
-        allow(Requests::ServerStatusRequest).to receive(:execute).with(subject, "*") { stub_response }
+        allow(ServerStatusRequest).to receive(:execute).with(subject, "*") { stub_response }
       end
       it "should report the status of EZID and subsystems" do
         response = subject.server_status("*")

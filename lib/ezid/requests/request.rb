@@ -1,5 +1,6 @@
 require "delegate"
 require "uri"
+require "net/http"
 require "forwardable"
 
 module Ezid
@@ -7,12 +8,18 @@ module Ezid
   # A request to the EZID service.
   #
   # @api private
+  # @abstract
   #
   class Request < SimpleDelegator
     extend Forwardable
 
     CHARSET = "UTF-8"
     CONTENT_TYPE = "text/plain"
+
+    GET = Net::HTTP::Get
+    PUT = Net::HTTP::Put
+    POST = Net::HTTP::Post
+    DELETE = Net::HTTP::Delete
 
     class << self
       attr_accessor :http_method
