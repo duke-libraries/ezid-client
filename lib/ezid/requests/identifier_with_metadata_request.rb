@@ -8,7 +8,7 @@ module Ezid
 
     def initialize(client, identifier, metadata)
       @metadata = Metadata.new(metadata)
-      super
+      super(client, identifier)
     end
   end
 end
