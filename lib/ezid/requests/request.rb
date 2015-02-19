@@ -3,6 +3,8 @@ require "uri"
 require "net/http"
 require "forwardable"
 
+require_relative "../responses/response"
+
 module Ezid
   #
   # A request to the EZID service.
@@ -16,13 +18,14 @@ module Ezid
     CHARSET = "UTF-8"
     CONTENT_TYPE = "text/plain"
 
+    # HTTP methods
     GET = Net::HTTP::Get
     PUT = Net::HTTP::Put
     POST = Net::HTTP::Post
     DELETE = Net::HTTP::Delete
 
     class << self
-      attr_accessor :http_method
+      attr_accessor :http_method, :path
 
       def execute(client, *args)
         request = new(client, *args)
@@ -32,7 +35,7 @@ module Ezid
 
       def short_name
         name.split("::").last.sub("Request", "")
-      end
+      end      
     end
 
     attr_reader :client
@@ -41,20 +44,13 @@ module Ezid
     # @param client [Ezid::Client] the client
     def initialize(client, *args)
       @client = client
-      handle_args(*args)
       super build_request
     end
 
     # Executes the request and returns the response
     # @return [Ezid::Response] the response
     def execute
-      http_response = connection.start do |conn| 
-        set_content_type(CONTENT_TYPE, charset: CHARSET)
-        add_authentication if authentication_required?
-        add_metadata if accepts_metadata?
-        conn.request(__getobj__) 
-      end
-      handle_response(http_response)
+      handle_response(get_response_for_request)
     end
 
     # The request URI
@@ -66,7 +62,13 @@ module Ezid
     # HTTP request path
     # @return [String] the path
     def path
-      raise NotImplementedError, "Subclasses must implement `#path'."
+      self.class.path
+    end
+
+    # Class to wrap Net::HTTPResponse
+    # @return [Class]
+    def response_class
+      Response
     end
 
     # HTTP request query string
@@ -77,22 +79,26 @@ module Ezid
       true
     end
 
-    def accepts_metadata?
-      respond_to?(:metadata)
+    def has_metadata?
+      !metadata.empty? rescue false
     end
 
-    protected
-
     def handle_response(http_response)
-      Response.new(http_response).tap do |response|
+      response_class.new(http_response).tap do |response|
         yield response if block_given?
       end
     end
 
-    # Subclass hook
-    def handle_args(*args); end
-
     private
+
+    def get_response_for_request
+      connection.start do |conn| 
+        set_content_type(CONTENT_TYPE, charset: CHARSET)
+        add_authentication if authentication_required?
+        add_metadata if has_metadata?
+        conn.request(__getobj__) 
+      end
+    end
 
     def build_request
       self.class.http_method.new(uri)
@@ -117,7 +123,7 @@ module Ezid
     end
 
     def add_metadata
-      self.body = metadata.to_anvl(false) unless metadata.empty?
+      self.body = metadata.to_anvl(false)
     end
 
   end

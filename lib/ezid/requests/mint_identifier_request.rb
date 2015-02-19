@@ -8,9 +8,10 @@ module Ezid
     self.http_method = POST
     attr_reader :shoulder, :metadata
     
-    def handle_args(*args)
-      @shoulder = args.first
-      @metadata = Metadata.new(args[1])
+    def initialize(client, shoulder, metadata)
+      @shoulder = shoulder
+      @metadata = Metadata.new(metadata)
+      super
     end
 
     def path

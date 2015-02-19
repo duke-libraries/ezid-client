@@ -3,12 +3,9 @@ require_relative "request"
 module Ezid
   class LoginRequest < Request
     self.http_method = GET
+    self.path = "/login"
 
-    def path
-      "/login"
-    end
-
-    def handle_response(http_response)
+    def handle_response(*)
       super do |response|
         session.open(response.cookie)
       end

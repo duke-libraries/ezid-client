@@ -1,12 +1,10 @@
 require "net/http"
 
 require_relative "configuration"
-require_relative "response"
 require_relative "session"
 require_relative "metadata"
 require_relative "identifier"
 require_relative "error"
-require_relative "status_response"
 
 Dir[File.expand_path("../requests/*.rb", __FILE__)].each { |m| require m }
 
@@ -151,7 +149,7 @@ module Ezid
 
     # @param subsystems [Array]
     # @raise [Ezid::Error]
-    # @return [Ezid::Status] the status response
+    # @return [Ezid::StatusResponse] the status response
     def server_status(*subsystems)
       execute ServerStatusRequest, *subsystems
     end

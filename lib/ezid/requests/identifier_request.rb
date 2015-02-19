@@ -10,8 +10,9 @@ module Ezid
       "/id/#{identifier}"
     end
 
-    def handle_args(*args)
-      @identifier = args.first
+    def initialize(client, identifier)
+      @identifier = identifier
+      super
     end
   end
 end

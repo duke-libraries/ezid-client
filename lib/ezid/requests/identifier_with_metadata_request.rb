@@ -6,9 +6,9 @@ module Ezid
   class IdentifierWithMetadataRequest < IdentifierRequest
     attr_reader :metadata
 
-    def handle_args(*args)
+    def initialize(client, identifier, metadata)
+      @metadata = Metadata.new(metadata)
       super
-      @metadata = Metadata.new(args[1])
     end
   end
 end
