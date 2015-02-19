@@ -8,8 +8,8 @@ module Ezid
 
     attr_reader :cookie
 
-    def initialize(response=nil)
-      open(response) if response
+    def initialize(cookie=nil)
+      open(cookie) if cookie
     end
 
     def inspect
