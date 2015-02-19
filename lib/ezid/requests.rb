@@ -1,5 +1,5 @@
 require "net/http"
-require_relative "request2"
+require_relative "request"
 require_relative "metadata"
 
 module Ezid
@@ -10,7 +10,7 @@ module Ezid
     POST = Net::HTTP::Post
     DELETE = Net::HTTP::Delete
 
-    class LoginRequest < Request2
+    class LoginRequest < Request
       self.http_method = GET
 
       def path
@@ -24,7 +24,7 @@ module Ezid
       end
     end
 
-    class LogoutRequest < Request2
+    class LogoutRequest < Request
       self.http_method = GET
 
       def path
@@ -42,7 +42,7 @@ module Ezid
       end
     end
 
-    class ServerStatusRequest < Request2
+    class ServerStatusRequest < Request
       self.http_method = GET
       attr_reader :subsystems
 
@@ -54,20 +54,24 @@ module Ezid
         "subsystems=#{subsystems.join(',')}"
       end
 
-      def post_initialize(*args)
+      def handle_args(*args)
         @subsystems = args
       end
 
       def handle_response(http_response)
         Status.new(super)
       end
+
+      def authentication_required?
+        false
+      end
     end
 
-    class MintIdentifierRequest < Request2
+    class MintIdentifierRequest < Request
       self.http_method = POST
       attr_reader :shoulder, :metadata
 
-      def post_initialize(*args)
+      def handle_args(*args)
         @shoulder = args.first
         @metadata = Metadata.new(args[1])
       end
@@ -77,14 +81,14 @@ module Ezid
       end
     end
 
-    class IdentifierRequest < Request2
+    class IdentifierRequest < Request
       attr_reader :identifier
 
       def path
         "/id/#{identifier}"
       end
 
-      def post_initialize(*args)
+      def handle_args(*args)
         @identifier = args.first
       end
     end
@@ -92,7 +96,7 @@ module Ezid
     class IdentifierWithMetadataRequest < IdentifierRequest
       attr_reader :metadata
 
-      def post_initialize(*args)
+      def handle_args(*args)
         super
         @metadata = Metadata.new(args[1])
       end
