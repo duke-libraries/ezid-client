@@ -45,8 +45,8 @@ module Ezid
 
     def initialize(opts = {})
       @host = opts[:host] || config.host
-      @use_ssl = opts.fetch(:use_ssl, config.use_ssl)
-      @port = (opts[:port] || config.port || (use_ssl ? 443 : 80)).to_i
+      @port = (opts[:port] || config.port).to_i
+      @use_ssl = opts[:use_ssl] || config.use_ssl
       @user = opts[:user] || config.user
       @password = opts[:password] || config.password
       if block_given?
@@ -107,6 +107,8 @@ module Ezid
       session.open?
     end
 
+    # Create an identifier (PUT an existing identifier)
+    # @see http://ezid.cdlib.org/doc/apidoc.html#operation-create-identifier
     # @param identifier [String] the identifier string to create
     # @param metadata [String, Hash, Ezid::Metadata] optional metadata to set
     # @raise [Ezid::Error]
@@ -115,6 +117,8 @@ module Ezid
       execute CreateIdentifierRequest, identifier, metadata
     end
 
+    # Mint an identifier
+    # @see http://ezid.cdlib.org/doc/apidoc.html#operation-mint-identifier
     # @param shoulder [String] the shoulder on which to mint a new identifier
     # @param metadata [String, Hash, Ezid::Metadata] metadata to set
     # @raise [Ezid::Error]
@@ -125,6 +129,8 @@ module Ezid
       execute MintIdentifierRequest, shoulder, metadata
     end
 
+    # Modify an identifier
+    # @see http://ezid.cdlib.org/doc/apidoc.html#operation-modify-identifier
     # @param identifier [String] the identifier to modify
     # @param metadata [String, Hash, Ezid::Metadata] metadata to set
     # @raise [Ezid::Error]
@@ -133,6 +139,8 @@ module Ezid
       execute ModifyIdentifierRequest, identifier, metadata
     end
 
+    # Get the metadata for an identifier
+    # @see http://ezid.cdlib.org/doc/apidoc.html#operation-get-identifier-metadata
     # @param identifier [String] the identifier to retrieve
     # @raise [Ezid::Error]
     # @return [Ezid::Response] the response
@@ -140,6 +148,8 @@ module Ezid
       execute GetIdentifierMetadataRequest, identifier
     end
 
+    # Delete an identifier (only reserved identifier can be deleted)
+    # @see http://ezid.cdlib.org/doc/apidoc.html#operation-delete-identifier
     # @param identifier [String] the identifier to delete
     # @raise [Ezid::Error]
     # @return [Ezid::Response] the response
@@ -147,6 +157,8 @@ module Ezid
       execute DeleteIdentifierRequest, identifier
     end
 
+    # Get the EZID server status (and the status of one or more subsystems)
+    # @see http://ezid.cdlib.org/doc/apidoc.html#server-status
     # @param subsystems [Array]
     # @raise [Ezid::Error]
     # @return [Ezid::StatusResponse] the status response
@@ -154,15 +166,21 @@ module Ezid
       execute ServerStatusRequest, *subsystems
     end
 
+    # The Net::HTTP object used to connect to EZID
+    # @return [Net::HTTP] the connection
     def connection
       @connection ||= build_connection
     end
 
     private
 
+    def use_ssl?
+      use_ssl || port == 443
+    end
+
     def build_connection
       conn = Net::HTTP.new(host, port)
-      conn.use_ssl = use_ssl
+      conn.use_ssl = use_ssl?
       conn
     end
 

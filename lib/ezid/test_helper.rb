@@ -8,6 +8,7 @@ module Ezid
 
     TEST_USER = "apitest"
     TEST_HOST = Configuration::HOST
+    TEST_PORT = Configuration::PORT
     TEST_SHOULDER = TEST_ARK_SHOULDER
 
     def ezid_test_mode!
@@ -15,7 +16,7 @@ module Ezid
         config.user     = ENV["EZID_TEST_USER"] || TEST_USER
         config.password = ENV["EZID_TEST_PASSWORD"]
         config.host     = ENV["EZID_TEST_HOST"] || TEST_HOST
-        config.use_ssl  = true
+        config.port     = ENV["EZID_TEST_PORT"] || TEST_PORT
         config.logger   = Logger.new(File::NULL)
         config.default_shoulder = ENV["EZID_TEST_SHOULDER"] || TEST_SHOULDER
       end
