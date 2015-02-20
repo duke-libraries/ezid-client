@@ -14,21 +14,6 @@ module Ezid
     # Error response status
     ERROR = "error"
 
-    IDENTIFIER_RE = /^(doi|ark|urn):[^\s]+/
-    SHADOW_ARK_RE = /\| (ark:[^\s]+)/
-
-    def id
-      @id ||= IDENTIFIER_RE.match(message)[0]
-    end
-
-    def shadow_ark
-      @shadow_ark ||= SHADOW_ARK_RE.match(message)[1]
-    end
-
-    def metadata
-      content[1]
-    end
-
     # The response status -- "success" or "error"
     # @return [String] the status
     def status
@@ -81,10 +66,6 @@ module Ezid
     # @return [String] the path
     def uri_path
       __getobj__.uri.path
-    end
-
-    def cookie
-      self["Set-Cookie"].split(";").first rescue nil
     end
 
   end

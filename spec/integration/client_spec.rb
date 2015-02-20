@@ -9,6 +9,7 @@ module Ezid
         modified = client.modify_identifier(@id, "dc.title" => "Test")
         expect(modified).to be_success
         retrieved = client.get_identifier_metadata(@id)
+        puts retrieved.class.to_s
         expect(retrieved).to be_success
         expect(retrieved.metadata).to match(/dc.title: Test/)
         deleted = client.delete_identifier(@id)

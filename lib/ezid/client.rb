@@ -6,6 +6,7 @@ require_relative "metadata"
 require_relative "identifier"
 require_relative "error"
 
+Dir[File.expand_path("../responses/*.rb", __FILE__)].each { |m| require m }
 Dir[File.expand_path("../requests/*.rb", __FILE__)].each { |m| require m }
 
 module Ezid
@@ -86,7 +87,8 @@ module Ezid
       if logged_in?
         logger.info("Already logged in, skipping login request.")
       else
-        execute LoginRequest
+        response = execute LoginRequest
+        session.open(response.cookie)
       end
       self
     end
@@ -96,6 +98,7 @@ module Ezid
     def logout
       if logged_in?
         execute LogoutRequest
+        session.close
       else
         logger.info("Not logged in, skipping logout request.")
       end

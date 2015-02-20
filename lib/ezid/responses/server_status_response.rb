@@ -3,10 +3,9 @@ require_relative "response"
 module Ezid
   #
   # A response to an EZID status request
-  #
   # @api private
   #
-  class Status < Response
+  class ServerStatusResponse < Response
 
     SUBSYSTEMS = %w( noid ldap datacite )
 
