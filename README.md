@@ -27,7 +27,7 @@ Or install it yourself as:
 
 [Mint an identifier on a shoulder](http://ezid.cdlib.org/doc/apidoc.html#operation-mint-identifier)
 
-```ruby
+```
 >> identifier = Ezid::Identifier.create(shoulder: "ark:/99999/fk4")
 I, [2014-12-04T15:06:02.428445 #86655]  INFO -- : EZID MINT ark:/99999/fk4 -- success: ark:/99999/fk4rx9d523
 I, [2014-12-04T15:06:03.249793 #86655]  INFO -- : EZID GET ark:/99999/fk4rx9d523 -- success: ark:/99999/fk4rx9d523
@@ -58,7 +58,7 @@ end
 
 New identifiers will then be minted on the default shoulder when a shoulder is not specified:
 
-```ruby
+```
 >> identifier = Ezid::Identifier.create
 I, [2014-12-09T11:22:34.499860 #32279]  INFO -- : EZID MINT ark:/99999/fk4 -- success: ark:/99999/fk43f4wd4v
 I, [2014-12-09T11:22:35.317181 #32279]  INFO -- : EZID GET ark:/99999/fk43f4wd4v -- success: ark:/99999/fk43f4wd4v
@@ -67,7 +67,7 @@ I, [2014-12-09T11:22:35.317181 #32279]  INFO -- : EZID GET ark:/99999/fk43f4wd4v
 
 [Create a specific identifier](http://ezid.cdlib.org/doc/apidoc.html#operation-create-identifier)
 
-```ruby
+```
 >> identifier = Ezid::Identifier.create(id: "ark:/99999/fk4rx9d523/12345")
 I, [2014-12-09T11:21:42.077297 #32279]  INFO -- : EZID CREATE ark:/99999/fk4rx9d523/12345 -- success: ark:/99999/fk4rx9d523/12345
 I, [2014-12-09T11:21:42.808534 #32279]  INFO -- : EZID GET ark:/99999/fk4rx9d523/12345 -- success: ark:/99999/fk4rx9d523/12345
@@ -76,7 +76,7 @@ I, [2014-12-09T11:21:42.808534 #32279]  INFO -- : EZID GET ark:/99999/fk4rx9d523
 
 **Retrieve** (Get Metadata)
 
-```ruby
+```
 >> identifier = Ezid::Identifier.find("ark:/99999/fk4rx9d523")
 I, [2014-12-04T15:07:00.648676 #86655]  INFO -- : EZID GET ark:/99999/fk4rx9d523 -- success: ark:/99999/fk4rx9d523
 => #<Ezid::Identifier id="ark:/99999/fk4rx9d523" status="public" target="http://ezid.cdlib.org/id/ark:/99999/fk4rx9d523" created="2014-12-04 20:06:02 UTC">
@@ -84,7 +84,7 @@ I, [2014-12-04T15:07:00.648676 #86655]  INFO -- : EZID GET ark:/99999/fk4rx9d523
 
 **Update** (Modify)
 
-```ruby
+```
 >> identifier.target
 => "http://ezid.cdlib.org/id/ark:/99999/fk43f4wd4v"
 >> identifier.target = "http://example.com"
@@ -101,7 +101,7 @@ I, [2014-12-09T11:24:27.039288 #32279]  INFO -- : EZID GET ark:/99999/fk43f4wd4v
 
 *Identifier status must be "reserved" to delete.* http://ezid.cdlib.org/doc/apidoc.html#operation-delete-identifier
 
-```ruby
+```
 >> identifier = Ezid::Identifier.create(shoulder: "ark:/99999/fk4", status: "reserved")
 I, [2014-12-04T15:12:39.976930 #86734]  INFO -- : EZID MINT ark:/99999/fk4 -- success: ark:/99999/fk4n58pc0r
 I, [2014-12-04T15:12:40.693256 #86734]  INFO -- : EZID GET ark:/99999/fk4n58pc0r -- success: ark:/99999/fk4n58pc0r
@@ -117,7 +117,7 @@ Accessors are provided to ease the use of EZID [reserved metadata elements](http
 
 **Reserved elements** can be read and written using the name of the element without the leading underscore:
 
-```ruby
+```
 >> identifier.status                 # reads "_status" element
 => "public"
 >> identifier.status = "unavailable" # writes "_status" element
@@ -131,7 +131,7 @@ Notes:
 
 **Metadata profile elements** can be read and written using the name of the element, replacing the dot (".") with an underscore:
 
-```ruby
+```
 >> identifier.dc_type           # reads "dc.type" element
 => "Collection"
 >> identifier.dc_type = "Image" # writes "dc.type" element
@@ -167,7 +167,7 @@ end
 
 Then new identifiers will receive the defaults:
 
-```ruby
+```
 >> identifier = Ezid::Identifier.create(shoulder: "ark:/99999/fk4")
 I, [2014-12-09T11:38:37.335136 #32279]  INFO -- : EZID MINT ark:/99999/fk4 -- success: ark:/99999/fk4zs2w500
 I, [2014-12-09T11:38:38.153546 #32279]  INFO -- : EZID GET ark:/99999/fk4zs2w500 -- success: ark:/99999/fk4zs2w500
@@ -204,15 +204,16 @@ end
 client = Ezid::Client.new(user: "eziduser", password: "ezidpass")
 ```
 
-## Alternate Host and Disabling SSL
+## Alternate Host and Port
 
-By default `Ezid::Client` connects over SSL to the EZID host at [ezid.cdlib.org](http://ezid.cdlib.org), but the host and SSL settings may be overridden:
+By default `Ezid::Client` connects via SSL over port 443 to the EZID host at [ezid.cdlib.org](https://ezid.cdlib.org), but the host, port and SSL settings may be overridden:
 
 - By environment variables:
 
 ```sh
 export EZID_HOST="localhost"
-export EZID_USE_SSL="false" # "false" disables SSL for all requests
+export EZID_PORT=8443
+export EZID_USE_SSL="true"
 ```
 
 - Client configuration:
@@ -220,14 +221,15 @@ export EZID_USE_SSL="false" # "false" disables SSL for all requests
 ```ruby
 Ezid::Client.configure do |config|
   config.host = "localhost"
-  config.use_ssl = false
+  config.port = 8443
+  config.use_ssl = true
 end
 ```
 
 - At client initialization (only if explicitly instantiating `Ezid::Client`):
 
 ```ruby
-client = Ezid::Client.new(host: "localhost", use_ssl: false)
+client = Ezid::Client.new(host: "localhost", port: 80)
 ```
 
 ## Test Helper
@@ -244,13 +246,14 @@ The module provides constants:
 - `TEST_DOI_SHOULDER` => "doi:10.5072/FK2"
 - `TEST_USER` => "apitest"
 - `TEST_HOST` => "ezid.cdlib.org"
+- `TEST_PORT` => 443
 
 The test user password is not provided - contact EZID and configure as above - or use your own EZID credentials, since all accounts can mint/create on the test shoulders.
 
 A convenience method `ezid_test_mode!` is provided to configure the client to:
 
 - authenticate as `TEST_USER`
-- use `TEST_HOST` as the host
+- use `TEST_HOST` as the host and `TEST_PORT` as the port
 - use `TEST_ARK_SHOULDER` as the default shoulder
 - log to the null device (instead of default STDERR)
 

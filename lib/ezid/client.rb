@@ -1,13 +1,13 @@
-require "uri"
+require "net/http"
 
 require_relative "configuration"
-require_relative "request"
-require_relative "response"
 require_relative "session"
 require_relative "metadata"
 require_relative "identifier"
 require_relative "error"
-require_relative "status"
+
+Dir[File.expand_path("../responses/*.rb", __FILE__)].each { |m| require m }
+Dir[File.expand_path("../requests/*.rb", __FILE__)].each { |m| require m }
 
 module Ezid
   #
@@ -42,16 +42,14 @@ module Ezid
       end
     end
 
-    attr_reader :session, :user, :password, :host, :use_ssl
+    attr_reader :user, :password, :host, :port, :use_ssl
 
     def initialize(opts = {})
-      @session = Session.new
       @host = opts[:host] || config.host
-      @use_ssl = opts.fetch(:use_ssl, config.use_ssl)
+      @port = (opts[:port] || config.port).to_i
+      @use_ssl = opts[:use_ssl] || config.use_ssl
       @user = opts[:user] || config.user
-      raise Error, "User name is required." unless user
       @password = opts[:password] || config.password
-      raise Error, "Password is required." unless password
       if block_given?
         login
         yield self
@@ -60,7 +58,8 @@ module Ezid
     end
 
     def inspect
-      "#<#{self.class.name} host=\"#{host}\" user=\"#{user}\" session=#{logged_in? ? 'OPEN' : 'CLOSED'}>"
+      "#<#{self.class.name} connection=#{connection.inspect} " \
+        "user=\"#{user}\" session=#{logged_in? ? 'OPEN' : 'CLOSED'}>"
     end
 
     # The client configuration
@@ -75,6 +74,12 @@ module Ezid
       @logger ||= config.logger
     end
 
+    # The client session
+    # @return [Ezid::Session] the session
+    def session
+      @session ||= Session.new
+    end
+
     # Open a session
     # @raise [Ezid::Error]
     # @return [Ezid::Client] the client
@@ -82,10 +87,7 @@ module Ezid
       if logged_in?
         logger.info("Already logged in, skipping login request.")
       else
-        response = Request.execute(:Get, build_uri("/login")) do |request|
-          add_authentication(request)
-        end
-        handle_response(response, "LOGIN")
+        response = execute LoginRequest
         session.open(response.cookie)
       end
       self
@@ -95,8 +97,7 @@ module Ezid
     # @return [Ezid::Client] the client
     def logout
       if logged_in?
-        response = Request.execute(:Get, build_uri("/logout"))
-        handle_response(response, "LOGOUT")
+        execute LogoutRequest
         session.close
       else
         logger.info("Not logged in, skipping logout request.")
@@ -109,18 +110,18 @@ module Ezid
       session.open?
     end
 
+    # Create an identifier (PUT an existing identifier)
+    # @see http://ezid.cdlib.org/doc/apidoc.html#operation-create-identifier
     # @param identifier [String] the identifier string to create
     # @param metadata [String, Hash, Ezid::Metadata] optional metadata to set
     # @raise [Ezid::Error]
     # @return [Ezid::Response] the response
     def create_identifier(identifier, metadata=nil)
-      response = Request.execute(:Put, build_uri("/id/#{identifier}")) do |request|
-        add_authentication(request)
-        add_metadata(request, metadata)
-      end
-      handle_response(response, "CREATE #{identifier}")
+      execute CreateIdentifierRequest, identifier, metadata
     end
 
+    # Mint an identifier
+    # @see http://ezid.cdlib.org/doc/apidoc.html#operation-mint-identifier
     # @param shoulder [String] the shoulder on which to mint a new identifier
     # @param metadata [String, Hash, Ezid::Metadata] metadata to set
     # @raise [Ezid::Error]
@@ -128,83 +129,76 @@ module Ezid
     def mint_identifier(shoulder=nil, metadata=nil)
       shoulder ||= config.default_shoulder
       raise Error, "Shoulder missing -- cannot mint identifier." unless shoulder
-      response = Request.execute(:Post, build_uri("/shoulder/#{shoulder}")) do |request|
-        add_authentication(request)
-        add_metadata(request, metadata)
-      end
-      handle_response(response, "MINT #{shoulder}")
+      execute MintIdentifierRequest, shoulder, metadata
     end
 
+    # Modify an identifier
+    # @see http://ezid.cdlib.org/doc/apidoc.html#operation-modify-identifier
     # @param identifier [String] the identifier to modify
     # @param metadata [String, Hash, Ezid::Metadata] metadata to set
     # @raise [Ezid::Error]
     # @return [Ezid::Response] the response
     def modify_identifier(identifier, metadata)
-      response = Request.execute(:Post, build_uri("/id/#{identifier}")) do |request|
-        add_authentication(request)
-        add_metadata(request, metadata)
-      end
-      handle_response(response, "MODIFY #{identifier}")
+      execute ModifyIdentifierRequest, identifier, metadata
     end
 
+    # Get the metadata for an identifier
+    # @see http://ezid.cdlib.org/doc/apidoc.html#operation-get-identifier-metadata
     # @param identifier [String] the identifier to retrieve
     # @raise [Ezid::Error]
     # @return [Ezid::Response] the response
     def get_identifier_metadata(identifier)
-      response = Request.execute(:Get, build_uri("/id/#{identifier}")) do |request|
-        add_authentication(request)
-      end
-      handle_response(response, "GET #{identifier}")
+      execute GetIdentifierMetadataRequest, identifier
     end
 
+    # Delete an identifier (only reserved identifier can be deleted)
+    # @see http://ezid.cdlib.org/doc/apidoc.html#operation-delete-identifier
     # @param identifier [String] the identifier to delete
     # @raise [Ezid::Error]
     # @return [Ezid::Response] the response
     def delete_identifier(identifier)
-      response = Request.execute(:Delete, build_uri("/id/#{identifier}")) do |request|
-        add_authentication(request)
-      end
-      handle_response(response, "DELETE #{identifier}")
+      execute DeleteIdentifierRequest, identifier
     end
 
+    # Get the EZID server status (and the status of one or more subsystems)
+    # @see http://ezid.cdlib.org/doc/apidoc.html#server-status
     # @param subsystems [Array]
     # @raise [Ezid::Error]
-    # @return [Ezid::Status] the status response
+    # @return [Ezid::StatusResponse] the status response
     def server_status(*subsystems)
-      response = Request.execute(:Get, build_uri("/status?subsystems=#{subsystems.join(',')}"))
-      handle_response(Status.new(response), "STATUS")
+      execute ServerStatusRequest, *subsystems
+    end
+
+    # The Net::HTTP object used to connect to EZID
+    # @return [Net::HTTP] the connection
+    def connection
+      @connection ||= build_connection
     end
 
     private
 
-      def build_uri(path)
-        scheme = use_ssl ? "https" : "http"
-        URI([scheme, "://", host, path].join)
-      end
+    def use_ssl?
+      use_ssl || port == 443
+    end
 
-      # Adds authentication data to the request
-      def add_authentication(request)
-        if session.open?
-          request["Cookie"] = session.cookie
-        else
-          request.basic_auth(user, password)
-        end
-      end
+    def build_connection
+      conn = Net::HTTP.new(host, port)
+      conn.use_ssl = use_ssl?
+      conn
+    end
 
-      # Adds EZID metadata (if any) to the request body
-      def add_metadata(request, metadata)
-        return if metadata.nil? || metadata.empty?
-        metadata = Metadata.new(metadata) unless metadata.is_a?(Metadata)
-        request.body = metadata.to_anvl(false)
-      end
+    def handle_response(response, request_name)
+      log_level = response.error? ? Logger::ERROR : Logger::INFO
+      message = "EZID #{request_name} -- #{response.status_line}"
+      logger.log(log_level, message)
+      raise response.exception if response.exception
+      response      
+    end
 
-      def handle_response(response, request_info)
-        log_level = response.error? ? Logger::ERROR : Logger::INFO
-        message = "EZID #{request_info} -- #{response.status_line}"
-        logger.log(log_level, message)
-        raise response.exception if response.exception
-        response
-      end
+    def execute(request_class, *args)
+      response = request_class.execute(self, *args)
+      handle_response(response, request_class.short_name)
+    end
 
   end
 end

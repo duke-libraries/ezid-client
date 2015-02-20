@@ -4,9 +4,7 @@ module Ezid
   #
   # EZID metadata collection for an identifier.
   #
-  # @note Although this API is not private, its direct use is discouraged.
-  #   Instead use the metadata element accessors through Ezid::Identifier.
-  # @api public
+  # @api private
   #
   class Metadata < SimpleDelegator
 
