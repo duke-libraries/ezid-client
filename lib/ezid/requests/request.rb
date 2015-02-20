@@ -15,9 +15,6 @@ module Ezid
   class Request < SimpleDelegator
     extend Forwardable
 
-    CHARSET = "UTF-8"
-    CONTENT_TYPE = "text/plain"
-
     # HTTP methods
     GET = Net::HTTP::Get
     PUT = Net::HTTP::Put
@@ -45,6 +42,7 @@ module Ezid
     def initialize(client, *args)
       @client = client
       super build_request
+      customize_request
     end
 
     # Executes the request and returns the response
@@ -93,11 +91,14 @@ module Ezid
 
     def get_response_for_request
       connection.start do |conn| 
-        set_content_type(CONTENT_TYPE, charset: CHARSET)
         add_authentication if authentication_required?
         add_metadata if has_metadata?
         conn.request(__getobj__) 
       end
+    end
+
+    def customize_request
+      set_content_type("text/plain", charset: "UTF-8")
     end
 
     def build_request
