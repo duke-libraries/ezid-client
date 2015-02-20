@@ -126,7 +126,7 @@ Note that, due to the asynchronous nature of this request, the response only ret
 I, [2015-02-20T15:16:53.462660 #55850]  INFO -- : EZID BatchDownload -- success: http://ezid.cdlib.org/download/473deecb96.csv.gz
 => #<Net::HTTPOK 200 OK readbody=true>
 >> response.download_url
-=> "http://ezid.cdlib.org/download/473deecb96.csv.gz"
+=> "http://ezid.cdlib.org/download/da543b91a0.csv.gz"
 ```
 
 ## Metadata handling
