@@ -169,6 +169,14 @@ module Ezid
       execute ServerStatusRequest, *subsystems
     end
 
+    # Submit a batch download request
+    # @see http://ezid.cdlib.org/doc/apidoc.html#batch-download
+    # @param format [String] format of results - one of "anvl", "csv", "xml"
+    # @param params [Hash] optional request parameters
+    def batch_download(params={})
+      execute BatchDownloadRequest, params
+    end
+
     # The Net::HTTP object used to connect to EZID
     # @return [Net::HTTP] the connection
     def connection
