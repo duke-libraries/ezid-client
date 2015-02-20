@@ -42,12 +42,13 @@ module Ezid
       end
     end
 
-    attr_reader :user, :password, :host, :port, :use_ssl
+    attr_reader :user, :password, :host, :port, :use_ssl, :timeout
 
     def initialize(opts = {})
       @host = opts[:host] || config.host
       @port = (opts[:port] || config.port).to_i
       @use_ssl = opts[:use_ssl] || config.use_ssl
+      @timeout = (opts[:timeout] || config.timeout).to_i
       @user = opts[:user] || config.user
       @password = opts[:password] || config.password
       if block_given?
@@ -169,6 +170,14 @@ module Ezid
       execute ServerStatusRequest, *subsystems
     end
 
+    # Submit a batch download request
+    # @see http://ezid.cdlib.org/doc/apidoc.html#batch-download
+    # @param format [String] format of results - one of "anvl", "csv", "xml"
+    # @param params [Hash] optional request parameters
+    def batch_download(params={})
+      execute BatchDownloadRequest, params
+    end
+
     # The Net::HTTP object used to connect to EZID
     # @return [Net::HTTP] the connection
     def connection
@@ -184,6 +193,7 @@ module Ezid
     def build_connection
       conn = Net::HTTP.new(host, port)
       conn.use_ssl = use_ssl?
+      conn.read_timeout = timeout
       conn
     end
 

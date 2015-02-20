@@ -137,6 +137,19 @@ EOS
       end
     end
 
+    describe "batch download" do
+      let(:stub_response) { BatchDownloadResponse.new(http_response) }
+      let(:http_response) { double(body: "success: http://ezid.cdlib.org/download/da543b91a0.xml.gz") }
+      before do
+        allow(BatchDownloadRequest).to receive(:execute).with(subject, format: "xml") { stub_response }
+      end
+      it "should return the URL to download the batch" do
+        response = subject.batch_download(format: "xml")
+        expect(response).to be_success
+        expect(response.download_url).to eq("http://ezid.cdlib.org/download/da543b91a0.xml.gz")
+      end
+    end
+
     describe "error handling" do
       let(:http_response) { double(body: "error: bad request - no such identifier") }
       it "should raise an exception" do
