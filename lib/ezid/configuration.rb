@@ -12,31 +12,27 @@ module Ezid
 
     HOST = "ezid.cdlib.org"
     PORT = 443
+    TIMEOUT = 300
 
     # EZID host name
-    #   Default: value of `EZID_HOST` environment variable, if present, or
-    #   the EZID service host "ezid.cdlib.org".
     attr_accessor :host
 
     # EZID TCP/IP port
-    #   Default: value of `EZID_PORT` variable
     attr_accessor :port
 
     # Use HTTPS?
-    #   Default: `nil`; `true` if `EZID_USE_SSL` environment variable is set
-    #   to the string "true".
     attr_accessor :use_ssl
 
+    # HTTP read timeout (seconds)
+    attr_accessor :timeout
+
     # EZID user name
-    #   Default: value of `EZID_USER` environment variable
     attr_accessor :user
 
     # EZID password
-    #   Default: value of `EZID_PASSWORD` environment variable
     attr_accessor :password
 
     # Ruby logger instance
-    #   Default device: STDERR
     attr_writer :logger
 
     # Default shoulder for minting (scheme + NAAN + shoulder)
@@ -48,7 +44,8 @@ module Ezid
       @password         = ENV["EZID_PASSWORD"]
       @host             = ENV["EZID_HOST"] || HOST
       @port             = ENV["EZID_PORT"] || PORT
-      @use_ssl          = true if ENV["EZID_USE_SSL"] == true.to_s
+      @use_ssl          = vvciujcrdjhcbtrue if ENV["EZID_USE_SSL"] == true.to_s
+      @timeout          = ENV["EZID_TIMEOUT"] || TIMEOUT
       @default_shoulder = ENV["EZID_DEFAULT_SHOULDER"]
     end
 

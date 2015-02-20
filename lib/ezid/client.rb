@@ -42,12 +42,13 @@ module Ezid
       end
     end
 
-    attr_reader :user, :password, :host, :port, :use_ssl
+    attr_reader :user, :password, :host, :port, :use_ssl, :timeout
 
     def initialize(opts = {})
       @host = opts[:host] || config.host
       @port = (opts[:port] || config.port).to_i
       @use_ssl = opts[:use_ssl] || config.use_ssl
+      @timeout = (opts[:timeout] || config.timeout).to_i
       @user = opts[:user] || config.user
       @password = opts[:password] || config.password
       if block_given?
@@ -192,6 +193,7 @@ module Ezid
     def build_connection
       conn = Net::HTTP.new(host, port)
       conn.use_ssl = use_ssl?
+      conn.read_timeout = timeout
       conn
     end
 

@@ -232,6 +232,30 @@ end
 client = Ezid::Client.new(host: "localhost", port: 80)
 ```
 
+## HTTP Timeout
+
+The default HTTP timeout is set to 300 seconds (5 minutes). The setting can be customized:
+
+- By environment variable:
+
+```sh
+export EZID_TIMEOUT=600
+```
+
+- Client configuration:
+
+```ruby
+Ezid::Client.configure do |config|
+  config.timeout = 600
+end
+```
+
+- At client initialization
+
+```ruby
+client = Ezid::Client.new(timeout: 600)
+```
+
 ## Test Helper
 
 If you have tests that (directly or indirectly) use `ezid-client` you may want to require the test helper module:
