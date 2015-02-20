@@ -29,8 +29,8 @@ Or install it yourself as:
 
 ```
 >> identifier = Ezid::Identifier.create(shoulder: "ark:/99999/fk4")
-I, [2014-12-04T15:06:02.428445 #86655]  INFO -- : EZID MINT ark:/99999/fk4 -- success: ark:/99999/fk4rx9d523
-I, [2014-12-04T15:06:03.249793 #86655]  INFO -- : EZID GET ark:/99999/fk4rx9d523 -- success: ark:/99999/fk4rx9d523
+I, [2014-12-04T15:06:02.428445 #86655]  INFO -- : EZID MintIdentifier -- success: ark:/99999/fk4rx9d523
+I, [2014-12-04T15:06:03.249793 #86655]  INFO -- : EZID GetIdentifierMetadata -- success: ark:/99999/fk4rx9d523
 => #<Ezid::Identifier id="ark:/99999/fk4rx9d523" status="public" target="http://ezid.cdlib.org/id/ark:/99999/fk4rx9d523" created="2014-12-04 20:06:02 UTC">
 >> identifier.id
 => "ark:/99999/fk4rx9d523"
@@ -60,8 +60,8 @@ New identifiers will then be minted on the default shoulder when a shoulder is n
 
 ```
 >> identifier = Ezid::Identifier.create
-I, [2014-12-09T11:22:34.499860 #32279]  INFO -- : EZID MINT ark:/99999/fk4 -- success: ark:/99999/fk43f4wd4v
-I, [2014-12-09T11:22:35.317181 #32279]  INFO -- : EZID GET ark:/99999/fk43f4wd4v -- success: ark:/99999/fk43f4wd4v
+I, [2014-12-09T11:22:34.499860 #32279]  INFO -- : EZID MintIdentifier -- success: ark:/99999/fk43f4wd4v
+I, [2014-12-09T11:22:35.317181 #32279]  INFO -- : EZID GetIdentifierMetadata -- success: ark:/99999/fk43f4wd4v
 => #<Ezid::Identifier id="ark:/99999/fk43f4wd4v" status="public" target="http://ezid.cdlib.org/id/ark:/99999/fk43f4wd4v" created="2014-12-09 16:22:35 UTC">
 ```
 
@@ -69,8 +69,8 @@ I, [2014-12-09T11:22:35.317181 #32279]  INFO -- : EZID GET ark:/99999/fk43f4wd4v
 
 ```
 >> identifier = Ezid::Identifier.create(id: "ark:/99999/fk4rx9d523/12345")
-I, [2014-12-09T11:21:42.077297 #32279]  INFO -- : EZID CREATE ark:/99999/fk4rx9d523/12345 -- success: ark:/99999/fk4rx9d523/12345
-I, [2014-12-09T11:21:42.808534 #32279]  INFO -- : EZID GET ark:/99999/fk4rx9d523/12345 -- success: ark:/99999/fk4rx9d523/12345
+I, [2014-12-09T11:21:42.077297 #32279]  INFO -- : EZID CreateIdentifier -- success: ark:/99999/fk4rx9d523/12345
+I, [2014-12-09T11:21:42.808534 #32279]  INFO -- : EZID GetIdentifierMetadata -- success: ark:/99999/fk4rx9d523/12345
 => #<Ezid::Identifier id="ark:/99999/fk4rx9d523/12345" status="public" target="http://ezid.cdlib.org/id/ark:/99999/fk4rx9d523/12345" created="2014-12-09 16:21:42 UTC">
 ```
 
@@ -78,7 +78,7 @@ I, [2014-12-09T11:21:42.808534 #32279]  INFO -- : EZID GET ark:/99999/fk4rx9d523
 
 ```
 >> identifier = Ezid::Identifier.find("ark:/99999/fk4rx9d523")
-I, [2014-12-04T15:07:00.648676 #86655]  INFO -- : EZID GET ark:/99999/fk4rx9d523 -- success: ark:/99999/fk4rx9d523
+I, [2014-12-04T15:07:00.648676 #86655]  INFO -- : EZID GetIdentifierMetadata -- success: ark:/99999/fk4rx9d523
 => #<Ezid::Identifier id="ark:/99999/fk4rx9d523" status="public" target="http://ezid.cdlib.org/id/ark:/99999/fk4rx9d523" created="2014-12-04 20:06:02 UTC">
 ```
 
@@ -90,8 +90,8 @@ I, [2014-12-04T15:07:00.648676 #86655]  INFO -- : EZID GET ark:/99999/fk4rx9d523
 >> identifier.target = "http://example.com"
 => "http://example.com"
 >> identifier.save
-I, [2014-12-09T11:24:26.321801 #32279]  INFO -- : EZID MODIFY ark:/99999/fk43f4wd4v -- success: ark:/99999/fk43f4wd4v
-I, [2014-12-09T11:24:27.039288 #32279]  INFO -- : EZID GET ark:/99999/fk43f4wd4v -- success: ark:/99999/fk43f4wd4v
+I, [2014-12-09T11:24:26.321801 #32279]  INFO -- : EZID ModifyIdentifier -- success: ark:/99999/fk43f4wd4v
+I, [2014-12-09T11:24:27.039288 #32279]  INFO -- : EZID GetIdentifierMetadata -- success: ark:/99999/fk43f4wd4v
 => #<Ezid::Identifier id="ark:/99999/fk43f4wd4v" status="public" target="http://example.com" created="2014-12-09 16:22:35 UTC">
 >> identifier.target
 => "http://example.com"
@@ -103,12 +103,30 @@ I, [2014-12-09T11:24:27.039288 #32279]  INFO -- : EZID GET ark:/99999/fk43f4wd4v
 
 ```
 >> identifier = Ezid::Identifier.create(shoulder: "ark:/99999/fk4", status: "reserved")
-I, [2014-12-04T15:12:39.976930 #86734]  INFO -- : EZID MINT ark:/99999/fk4 -- success: ark:/99999/fk4n58pc0r
-I, [2014-12-04T15:12:40.693256 #86734]  INFO -- : EZID GET ark:/99999/fk4n58pc0r -- success: ark:/99999/fk4n58pc0r
+I, [2014-12-04T15:12:39.976930 #86734]  INFO -- : EZID MintIdentifier -- success: ark:/99999/fk4n58pc0r
+I, [2014-12-04T15:12:40.693256 #86734]  INFO -- : EZID GetIdentifierMetadata -- success: ark:/99999/fk4n58pc0r
 => #<Ezid::Identifier id="ark:/99999/fk4n58pc0r" status="reserved" target="http://ezid.cdlib.org/id/ark:/99999/fk4n58pc0r" created="2014-12-04 20:12:39 UTC">
 >> identifier.delete
-I, [2014-12-04T15:12:48.853964 #86734]  INFO -- : EZID DELETE ark:/99999/fk4n58pc0r -- success: ark:/99999/fk4n58pc0r
+I, [2014-12-04T15:12:48.853964 #86734]  INFO -- : EZID DeleteIdentifier -- success: ark:/99999/fk4n58pc0r
 => #<Ezid::Identifier id="ark:/99999/fk4n58pc0r" DELETED>
+```
+
+## Batch Download
+
+Instantiate an `Ezid::Client` and call `batch_download` with hash options -- see http://ezid.cdlib.org/doc/apidoc.html#parameters. Repeated values should be given as an array value for the parameter key.
+
+Note that, due to the asynchronous nature of this request, the response only returns the URL at which the batch will be available to download (as described in the EZID documentation). Use the `notify` option to specify one or more email addresses to receive notification when the download file is actually available.
+
+**Example**
+
+```
+>> c = Ezid::Client.new
+=> #<Ezid::Client connection=#<Net::HTTP ezid.cdlib.org:443 open=false> user="eziduser" session=CLOSED>
+>> response = c.batch_download(format: "csv", notify: "eziduser@example.com", column: ["_id", "_target", "_status", "_profile", "_export", "_created", "_updated"], convertTimestamps: "yes", permanence: "real", owner: "eziduser")
+I, [2015-02-20T15:16:53.462660 #55850]  INFO -- : EZID BatchDownload -- success: http://ezid.cdlib.org/download/473deecb96.csv.gz
+=> #<Net::HTTPOK 200 OK readbody=true>
+>> response.download_url
+=> "http://ezid.cdlib.org/download/473deecb96.csv.gz"
 ```
 
 ## Metadata handling
@@ -169,8 +187,8 @@ Then new identifiers will receive the defaults:
 
 ```
 >> identifier = Ezid::Identifier.create(shoulder: "ark:/99999/fk4")
-I, [2014-12-09T11:38:37.335136 #32279]  INFO -- : EZID MINT ark:/99999/fk4 -- success: ark:/99999/fk4zs2w500
-I, [2014-12-09T11:38:38.153546 #32279]  INFO -- : EZID GET ark:/99999/fk4zs2w500 -- success: ark:/99999/fk4zs2w500
+I, [2014-12-09T11:38:37.335136 #32279]  INFO -- : EZID MintIdentifier -- success: ark:/99999/fk4zs2w500
+I, [2014-12-09T11:38:38.153546 #32279]  INFO -- : EZID GetIdentifierMetadata -- success: ark:/99999/fk4zs2w500
 => #<Ezid::Identifier id="ark:/99999/fk4zs2w500" status="reserved" target="http://ezid.cdlib.org/id/ark:/99999/fk4zs2w500" created="2014-12-09 16:38:38 UTC">
 >> identifier.profile
 => "dc"
