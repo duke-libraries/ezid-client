@@ -42,7 +42,7 @@ module Ezid
     def initialize(client, *args)
       @client = client
       super build_request
-      customize_request
+      set_content_type("text/plain", charset: "UTF-8")
     end
 
     # Executes the request and returns the response
@@ -95,10 +95,6 @@ module Ezid
         add_metadata if has_metadata?
         conn.request(__getobj__) 
       end
-    end
-
-    def customize_request
-      set_content_type("text/plain", charset: "UTF-8")
     end
 
     def build_request
