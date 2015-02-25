@@ -145,7 +145,7 @@ Accessors are provided to ease the use of EZID [reserved metadata elements](http
 Notes:
 - `_crossref` is an exception because `crossref` is also the name of a metadata profile and a special element.  Use `identifier._crossref` to read and `identifier._crossref = value` to write.
 - Reserved elements which are not user-writeable do not implement writers.
-- Special readers are implemented for reserved elements having date/time values -- `_created` and `_updated` -- which convert the string time values of EZID to Ruby `Time` instances.
+- Special readers are implemented for reserved elements having date/time values (`_created` and `_updated`) which convert the string time values of EZID to Ruby `Time` instances.
 
 **Metadata profile elements** can be read and written using the name of the element, replacing the dot (".") with an underscore:
 
@@ -156,18 +156,7 @@ Notes:
 => "Image"
 ```
 
-**Registering custom metadata elements**
-
-Custom metadata element accessors can be created by a registration process:
-
-```ruby
-Ezid::Client.configure do |config|
-  # register the element "custom"
-  config.metadata.register_element :custom
-  # register the element "dc.identifier" under the accessor :dc_identifier
-  config.metadata.register_element :dc_identifier, name: "dc.identifier"
-end
-```
+Accessors are also implemented for the `crossref`, `datacite`, and `erc` elements as described in the EZID API documentation.
 
 **Setting default metadata values**
 

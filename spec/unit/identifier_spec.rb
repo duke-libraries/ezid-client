@@ -150,7 +150,7 @@ module Ezid
           allow(subject).to receive(:persisted?) { true }
         end
         it "should modify the identifier" do
-          expect(subject.client).to receive(:modify_identifier).with("id", {}) { double(id: "id") }
+          expect(subject.client).to receive(:modify_identifier).with("id", subject.metadata) { double(id: "id") }
           subject.save
         end
       end
@@ -161,7 +161,7 @@ module Ezid
         context "and `id' is present" do
           before { allow(subject).to receive(:id) { "id" } }
           it "should create the identifier" do
-            expect(subject.client).to receive(:create_identifier).with("id", {}) { double(id: "id") }
+            expect(subject.client).to receive(:create_identifier).with("id", subject.metadata) { double(id: "id") }
             subject.save
           end
         end
@@ -169,7 +169,7 @@ module Ezid
           context "and `shoulder' is present" do
             before { allow(subject).to receive(:shoulder) { TEST_ARK_SHOULDER } }
             it "should mint the identifier" do
-              expect(subject.client).to receive(:mint_identifier).with(TEST_ARK_SHOULDER, {}) { double(id: "id") }
+              expect(subject.client).to receive(:mint_identifier).with(TEST_ARK_SHOULDER, subject.metadata) { double(id: "id") }
               subject.save
             end
           end
