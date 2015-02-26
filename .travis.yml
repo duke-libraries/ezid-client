@@ -1,10 +1,8 @@
 language: ruby
 rvm:
+  - 2.2
   - 2.1
   - 2.0.0
 cache: 
   - bundler
 script: "bundle exec rake ci"
-notifications:
-  email:
-    - lib-drs@duke.edu
