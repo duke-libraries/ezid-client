@@ -49,6 +49,12 @@ module Ezid
       @default_shoulder = ENV["EZID_DEFAULT_SHOULDER"]
     end
 
+    def inspect
+      ivars = instance_variables.reject { |v| v == :@password }
+                                .map { |v| "#{v}=#{instance_variable_get(v).inspect}" }
+      "#<#{self.class.name} #{ivars.join(', ')}>"
+    end
+
     def logger
       @logger ||= Logger.new(STDERR)
     end
