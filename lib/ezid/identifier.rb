@@ -2,14 +2,14 @@ module Ezid
   #
   # Represents an EZID identifier as a resource.
   #
-  # Ezid::Identifier delegates access to registered metadata elements through #method_missing.
-  #
   # @api public
   #
   class Identifier
 
-    attr_reader :id, :client
-    attr_accessor :shoulder, :metadata
+    attr_reader :client
+    attr_accessor :id, :shoulder, :metadata, :state
+
+    private :state, :state=, :id=
 
     # Attributes to display on inspect
     INSPECT_ATTRS = %w( id status target created )
@@ -46,21 +46,30 @@ module Ezid
       @client = args.delete(:client) || Client.new
       @id = args.delete(:id)
       @shoulder = args.delete(:shoulder)
-      @deleted = false
-      init_metadata(args)
+      @state = :new
+      self.metadata = Metadata.new args.delete(:metadata)
+      update_metadata self.class.defaults.merge(args) # deprecate?
     end
 
     def inspect
       attrs = if deleted?
                 "id=\"#{id}\" DELETED"
               else
-                INSPECT_ATTRS.map { |attr| "#{attr}=\"#{send(attr)}\"" }.join(" ")
+                INSPECT_ATTRS.map { |attr| "#{attr}=#{send(attr).inspect}" }.join(", ")
               end
       "#<#{self.class.name} #{attrs}>"
     end
 
     def to_s
       id
+    end
+
+    # Returns the identifier metadata
+    # @param refresh [Boolean] - flag to refresh the metadata from EZID if stale (default: `true`)
+    # @return [Ezid::Metadata] the metadata
+    def metadata(refresh = true)
+      refresh_metadata if refresh && stale?
+      @metadata
     end
 
     # Persist the identifer and/or metadata to EZID.
@@ -72,8 +81,8 @@ module Ezid
     #   with an error status.
     def save
       raise Error, "Cannot save a deleted identifier." if deleted?
-      persisted? ? modify : create_or_mint
-      reload
+      persist
+      reset
     end
 
     # Updates the metadata
@@ -87,14 +96,13 @@ module Ezid
     # Is the identifier persisted?
     # @return [Boolean]
     def persisted?
-      return false if deleted?
-      !!(id && created)
+      state == :persisted
     end
 
     # Has the identifier been deleted?
     # @return [Boolean]
     def deleted?
-      @deleted
+      state == :deleted
     end
 
     # Updates the metadata and saves the identifier
@@ -128,7 +136,7 @@ module Ezid
     def delete
       raise Error, "Only persisted, reserved identifiers may be deleted: #{inspect}." unless deletable?
       client.delete_identifier(id)
-      @deleted = true
+      self.state = :deleted
       reset
     end
 
@@ -174,44 +182,49 @@ module Ezid
 
     protected
 
-      def method_missing(method, *args)
-        metadata.send(method, *args)
-      rescue NoMethodError
-        super
-      end
+    def method_missing(method, *args)
+      metadata.send(method, *args)
+    rescue NoMethodError
+      super
+    end
 
     private
 
-      def refresh_metadata
-        response = client.get_identifier_metadata(id)
-        @metadata = Metadata.new(response.metadata)
-      end
+    def stale?
+      persisted? && metadata(false).empty?
+    end
 
-      def clear_metadata
-        @metadata.clear
-      end
+    def refresh_metadata
+      response = client.get_identifier_metadata(id)
+      self.metadata = Metadata.new response.metadata
+      self.state = :persisted
+    end
 
-      def modify
-        client.modify_identifier(id, metadata)
-      end
+    def clear_metadata
+      metadata(false).clear
+    end
 
-      def create_or_mint
-        id ? create : mint
-      end
+    def modify
+      client.modify_identifier(id, metadata)
+    end
 
-      def mint
-        response = client.mint_identifier(shoulder, metadata)
-        @id = response.id
-      end
+    def create_or_mint
+      id ? create : mint
+    end
 
-      def create
-        client.create_identifier(id, metadata)
-      end
+    def mint
+      response = client.mint_identifier(shoulder, metadata)
+      self.id = response.id
+    end
 
-      def init_metadata(args)
-        @metadata = Metadata.new(args.delete(:metadata))
-        update_metadata(self.class.defaults.merge(args))
-      end
+    def create
+      client.create_identifier(id, metadata)
+    end
+
+    def persist
+      persisted? ? modify : create_or_mint
+      self.state = :persisted
+    end
 
   end
 end

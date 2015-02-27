@@ -78,6 +78,13 @@ module Ezid
       end
     end
 
+    describe "#update_metadata" do
+      it "should update the metadata" do
+        subject.update_metadata(:status => "public", _target: "localhost", "dc.creator" => "Me")
+        expect(subject.metadata.to_h).to eq({"_status"=>"public", "_target"=>"localhost", "dc.creator"=>"Me"})
+      end
+    end
+
     describe "#reload" do
       let(:metadata) { "_profile: erc" }
       before { allow(subject).to receive(:id) { "id" } }
@@ -89,29 +96,29 @@ module Ezid
     end
 
     describe "#reset" do
+      before { subject.metadata = Metadata.new(status: "public") }
       it "should clear the local metadata" do
-        expect(subject.metadata).to receive(:clear)
-        subject.reset
+        expect { subject.reset }.to change { subject.metadata.empty? }.from(false).to(true)
       end
     end
 
     describe "#persisted?" do
-      it "should be false if id is nil" do
-        expect(subject).not_to be_persisted
+      describe "after initialization" do
+        it { is_expected.not_to be_persisted }
       end
-      context "when `created' is nil" do
-        before { allow(subject).to receive(:id) { "ark:/99999/fk4fn19h88" } }
-        it "should be false" do
-          expect(subject).not_to be_persisted
+      describe "when saving an unpersisted object" do
+        before { allow(subject).to receive(:create_or_mint) { nil } }
+        it "should mark it as persisted" do
+          expect { subject.save }.to change(subject, :persisted?).from(false).to(true)
         end
       end
-      context "when id and `created' are present" do
+      describe "when saving a persisted object" do
         before do
-          allow(subject).to receive(:id) { "ark:/99999/fk4fn19h88" }
-          subject.metadata["_created"] = "1416507086"
+          allow(subject).to receive(:persisted?) { true }
+          allow(subject).to receive(:modify) { nil } 
         end
-        it "should be true" do
-          expect(subject).to be_persisted
+        it "should not change the persisted status" do
+          expect { subject.save }.not_to change(subject, :persisted?)
         end
       end
     end
@@ -143,14 +150,15 @@ module Ezid
     end
 
     describe "#save" do
-      before { allow(subject).to receive(:reload) { double } }
       context "when the identifier is persisted" do
+        let(:metadata) { Metadata.new }
         before do
           allow(subject).to receive(:id) { "id" }
           allow(subject).to receive(:persisted?) { true }
+          allow(subject).to receive(:metadata) { metadata }
         end
         it "should modify the identifier" do
-          expect(subject.client).to receive(:modify_identifier).with("id", subject.metadata) { double(id: "id") }
+          expect(subject.client).to receive(:modify_identifier).with("id", metadata) { double(id: "id") }
           subject.save
         end
       end
