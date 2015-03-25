@@ -59,8 +59,8 @@ module Ezid
     end
 
     def inspect
-      "#<#{self.class.name} connection=#{connection.inspect} " \
-        "user=\"#{user}\" session=#{logged_in? ? 'OPEN' : 'CLOSED'}>"
+      "#<#{self.class.name} connection=#{connection.inspect}, " \
+        "user=#{user.inspect}, session=#{logged_in? ? 'OPEN' : 'CLOSED'}>"
     end
 
     # The client configuration
