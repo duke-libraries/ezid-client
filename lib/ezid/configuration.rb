@@ -10,7 +10,7 @@ module Ezid
   #
   class Configuration
 
-    HOST = "ezid.cdlib.org"
+    HOST = "ezid.cdlib.org".freeze
     PORT = 443
     TIMEOUT = 300
 
