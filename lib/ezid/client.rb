@@ -18,10 +18,10 @@ module Ezid
   class Client
 
     # ezid-client gem version (e.g., "0.8.0")
-    VERSION = File.read(File.expand_path("../../../VERSION", __FILE__)).chomp
+    VERSION = File.read(File.expand_path("../../../VERSION", __FILE__)).chomp.freeze
 
     # EZID API version
-    API_VERSION = "2"
+    API_VERSION = "2".freeze
 
     class << self
       # Configuration reader

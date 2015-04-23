@@ -12,12 +12,12 @@ module Ezid
     private :state, :state=, :id=
 
     # Attributes to display on inspect
-    INSPECT_ATTRS = %w( id status target created )
+    INSPECT_ATTRS = %w( id status target created ).freeze
 
     # EZID status terms
-    PUBLIC = "public"
-    RESERVED = "reserved"
-    UNAVAILABLE = "unavailable"
+    PUBLIC = "public".freeze
+    RESERVED = "reserved".freeze
+    UNAVAILABLE = "unavailable".freeze
 
     class << self
       attr_accessor :defaults
@@ -170,7 +170,9 @@ module Ezid
     def unavailable!(reason = nil)
       raise Error, "Cannot make a reserved identifier unavailable." if persisted? && reserved?
       value = UNAVAILABLE
-      value << " | #{reason}" if reason
+      if reason
+        value += " | #{reason}"
+      end
       self.status = value
     end
 
