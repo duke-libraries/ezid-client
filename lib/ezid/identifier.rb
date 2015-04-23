@@ -168,7 +168,12 @@ module Ezid
     # @param reason [String] an optional reason 
     # @return [String] the new status
     def unavailable!(reason = nil)
-      raise Error, "Cannot make a reserved identifier unavailable." if persisted? && reserved?
+      if persisted? && reserved?
+        raise Error, "Cannot make a reserved identifier unavailable."
+      end
+      if unavailable? and reason.nil?
+        return
+      end
       value = UNAVAILABLE
       if reason
         value += " | #{reason}"
