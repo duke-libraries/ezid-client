@@ -9,10 +9,10 @@ module Ezid
   class Response < SimpleDelegator
 
     # Success response status
-    SUCCESS = "success"
+    SUCCESS = "success".freeze
 
     # Error response status
-    ERROR = "error"
+    ERROR = "error".freeze
 
     # The response status -- "success" or "error"
     # @return [String] the status

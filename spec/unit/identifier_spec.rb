@@ -17,9 +17,9 @@ module Ezid
     end
 
     describe ".find" do
-      it "should instantiate a new identifier and reload" do
+      it "should instantiate a new identifier and load the metadata" do
         expect(described_class).to receive(:new).with(id: "id").and_call_original
-        expect_any_instance_of(described_class).to receive(:reload) { double }
+        expect_any_instance_of(described_class).to receive(:load_metadata) { double }
         described_class.find("id")
       end
     end
@@ -85,13 +85,13 @@ module Ezid
       end
     end
 
-    describe "#reload" do
+    describe "#load_metadata" do
       let(:metadata) { "_profile: erc" }
       before { allow(subject).to receive(:id) { "id" } }
-      it "should reinitialize the metadata from EZID" do
+      it "should initialize the metadata from EZID" do
         expect(subject.client).to receive(:get_identifier_metadata).with("id") { double(id: "id", metadata: metadata) }
         expect(Metadata).to receive(:new).with(metadata)
-        subject.reload
+        subject.load_metadata
       end
     end
 
@@ -228,6 +228,7 @@ module Ezid
           context "and no reason is given" do
             it "should log a warning" do
               pending "https://github.com/duke-libraries/ezid-client/issues/46"
+              allow_message_expectations_on_nil
               expect(subject.logger).to receive(:warn)
               subject.unavailable!
             end
@@ -238,6 +239,7 @@ module Ezid
           context "and a reason is given" do
             it "should log a warning" do
               pending "https://github.com/duke-libraries/ezid-client/issues/46"
+              allow_message_expectations_on_nil
               expect(subject.logger).to receive(:warn)
               subject.unavailable!("because")
             end
