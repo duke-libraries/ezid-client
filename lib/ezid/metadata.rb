@@ -12,7 +12,7 @@ module Ezid
     attr_reader :elements
 
     def_delegators :elements, :[], :[]=, :each, :clear, :to_h, :empty?
-    
+
     class << self
       def metadata_reader(element, alias_as=nil)
         define_method element do
@@ -29,7 +29,7 @@ module Ezid
         end
         if alias_as
           alias_method "#{alias_as}=".to_sym, "#{element}=".to_sym
-        end 
+        end
       end
 
       def metadata_accessor(element, alias_as=nil)
@@ -38,10 +38,10 @@ module Ezid
       end
 
       def metadata_profile(profile, *elements)
-        elements.each do |element| 
+        elements.each do |element|
           profile_element = [profile, element].join(".")
           method = [profile, element].join("_")
-          
+
           define_method method do
             get(profile_element)
           end
@@ -91,9 +91,9 @@ module Ezid
       datacite: [:creator, :title, :publisher, :publicationyear, :resourcetype],
       erc: [:who, :what, :when]
     }
-    
+
     PROFILES.each do |profile, elements|
-      metadata_profile profile, *elements 
+      metadata_profile profile, *elements
     end
 
     # Accessors for EZID internal metadata elements
@@ -105,15 +105,15 @@ module Ezid
     metadata_accessor :_target, :target
 
     # Readers for EZID read-only internal metadata elements
-    metadata_reader :_created 
+    metadata_reader :_created
     metadata_reader :_datacenter, :datacenter
     metadata_reader :_owner, :owner
     metadata_reader :_ownergroup, :ownergroup
     metadata_reader :_shadowedby, :shadowedby
     metadata_reader :_shadows, :shadows
-    metadata_reader :_updated 
+    metadata_reader :_updated
 
-    # Accessors for 
+    # Accessors for
     metadata_accessor :crossref
     metadata_accessor :datacite
     metadata_accessor :erc
@@ -136,7 +136,7 @@ module Ezid
     def to_anvl(include_readonly = true)
       hsh = elements.dup
       hsh.reject! { |k, v| READONLY.include?(k) } unless include_readonly
-      lines = hsh.map do |name, value| 
+      lines = hsh.map do |name, value|
         element = [escape(ESCAPE_NAMES_RE, name), escape(ESCAPE_VALUES_RE, value)]
         element.join(ANVL_SEPARATOR)
       end
@@ -206,4 +206,3 @@ module Ezid
 
   end
 end
-

@@ -115,7 +115,7 @@ module Ezid
       describe "when saving a persisted object" do
         before do
           allow(subject).to receive(:persisted?) { true }
-          allow(subject).to receive(:modify) { nil } 
+          allow(subject).to receive(:modify) { nil }
         end
         it "should not change the persisted status" do
           expect { subject.save }.not_to change(subject, :persisted?)
@@ -132,7 +132,7 @@ module Ezid
             expect(subject.client).to receive(:delete_identifier).with("id") { double(id: "id") }
             subject.delete
             expect(subject).to be_deleted
-          end          
+          end
         end
         context "and is not persisted" do
           before { allow(subject).to receive(:persisted?) { false } }

@@ -1,7 +1,7 @@
 require_relative "identifier_response"
 
 module Ezid
-  # 
+  #
   # Response to a get identifier metadata request
   # @api private
   #

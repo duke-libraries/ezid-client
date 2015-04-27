@@ -173,7 +173,7 @@ module Ezid
     end
 
     # Mark the identifier as unavailable
-    # @param reason [String] an optional reason 
+    # @param reason [String] an optional reason
     # @return [String] the new status
     def unavailable!(reason = nil)
       if persisted? && reserved?

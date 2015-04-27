@@ -202,7 +202,7 @@ module Ezid
       message = "EZID #{request_name} -- #{response.status_line}"
       logger.log(log_level, message)
       raise response.exception if response.exception
-      response      
+      response
     end
 
     def execute(request_class, *args)

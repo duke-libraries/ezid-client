@@ -3,6 +3,6 @@ rvm:
   - 2.2
   - 2.1
   - 2.0.0
-cache: 
+cache:
   - bundler
 script: "bundle exec rake ci"

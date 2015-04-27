@@ -14,7 +14,7 @@ module Ezid
     self.response_class = MintIdentifierResponse
 
     attr_reader :shoulder, :metadata
-    
+
     def initialize(client, shoulder, metadata)
       @shoulder = shoulder
       @metadata = Metadata.new(metadata)

@@ -60,7 +60,7 @@ EOS
         let(:http_response) { double(body: "success: ark:/99999/fk4fn19h88") }
         context "and the :default_shoulder config option is set" do
           before do
-            allow(MintIdentifierRequest).to receive(:execute).with(subject, TEST_ARK_SHOULDER, nil) { stub_response } 
+            allow(MintIdentifierRequest).to receive(:execute).with(subject, TEST_ARK_SHOULDER, nil) { stub_response }
             allow(Client.config).to receive(:default_shoulder) { TEST_ARK_SHOULDER }
           end
           it "should use the default shoulder" do
