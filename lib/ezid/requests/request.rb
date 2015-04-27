@@ -32,7 +32,7 @@ module Ezid
 
       def short_name
         name.split("::").last.sub("Request", "")
-      end      
+      end
     end
 
     attr_reader :client
@@ -90,10 +90,10 @@ module Ezid
     private
 
     def get_response_for_request
-      connection.start do |conn| 
+      connection.start do |conn|
         add_authentication if authentication_required?
         add_metadata if has_metadata?
-        conn.request(__getobj__) 
+        conn.request(__getobj__)
       end
     end
 

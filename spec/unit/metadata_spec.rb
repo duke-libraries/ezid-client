@@ -8,14 +8,14 @@ module Ezid
           expect(subject[writer.to_s]).to eq("value")
         end
       end
-      
+
       shared_examples "a metadata reader" do |reader|
         it "reads the \"#{reader}\" element" do
           subject[reader.to_s] = "value"
           expect(subject.send(reader)).to eq("value")
         end
       end
-      
+
       shared_examples "a metadata reader with an alias" do |reader, aliased_as|
         it_behaves_like "a metadata reader", reader
         it "has a reader alias \"#{aliased_as}\"" do
@@ -23,7 +23,7 @@ module Ezid
           expect(subject.send(aliased_as)).to eq("value")
         end
       end
-      
+
       shared_examples "a metadata writer with an alias" do |writer, aliased_as|
         it_behaves_like "a metadata writer", writer
         it "has a writer alias \"#{aliased_as}\"" do
@@ -52,7 +52,7 @@ module Ezid
       shared_examples "a metadata profile accessor with an alias" do |profile, accessor|
         it_behaves_like "a metadata accessor with an alias", [profile, accessor].join("."), [profile, accessor].join("_")
       end
-      
+
       describe "_owner" do
         it_behaves_like "a metadata reader with an alias", :_owner, :owner
       end
@@ -68,7 +68,7 @@ module Ezid
       describe "_datacenter" do
         it_behaves_like "a metadata reader with an alias", :_datacenter, :datacenter
       end
-      
+
       describe "_coowners" do
         it_behaves_like "a metadata accessor with an alias", :_coowners, :coowners
       end
@@ -84,7 +84,7 @@ module Ezid
       describe "_export" do
         it_behaves_like "a metadata accessor with an alias", :_export, :export
       end
-      
+
       describe "_created" do
         it_behaves_like "a metadata reader", :_created
         it_behaves_like "a time reader alias", :_created, :created
@@ -93,7 +93,7 @@ module Ezid
         it_behaves_like "a metadata reader", :_updated
         it_behaves_like "a time reader alias", :_updated, :updated
       end
-      
+
       describe "erc" do
         it_behaves_like "a metadata accessor", :erc
       end
@@ -106,7 +106,7 @@ module Ezid
       describe "crossref" do
         it_behaves_like "a metadata accessor", :crossref
       end
-      
+
       describe "dc.creator" do
         it_behaves_like "a metadata profile accessor with an alias", :dc, :creator
       end
@@ -122,7 +122,7 @@ module Ezid
       describe "dc.type" do
         it_behaves_like "a metadata profile accessor with an alias", :dc, :type
       end
-      
+
       describe "datacite.creator" do
         it_behaves_like "a metadata profile accessor with an alias", :datacite, :creator
       end
@@ -138,7 +138,7 @@ module Ezid
       describe "datacite.resourcetype" do
         it_behaves_like "a metadata profile accessor with an alias", :datacite, :resourcetype
       end
-      
+
       describe "erc.who" do
         it_behaves_like "a metadata profile accessor with an alias", :erc, :who
       end
