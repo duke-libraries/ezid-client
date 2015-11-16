@@ -45,7 +45,7 @@ module Ezid
         subject { described_class.create(shoulder: TEST_ARK_SHOULDER, status: "reserved") }
         before { subject.delete }
         it "should delete the identifier" do
-          expect { described_class.find(subject.id) }.to raise_error
+          expect { described_class.find(subject.id) }.to raise_error(Error)
         end
       end
     end

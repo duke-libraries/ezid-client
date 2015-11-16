@@ -194,8 +194,8 @@ _created: 1416507086
 _status: public
 EOS
         end
-        it "should treat the string as an ANVL document, splitting into keys and values and unescaping" do
-          expect(subject.elements).to eq({ "_updated" => "1416507086",
+        it "treats the string as an ANVL document, splitting into keys and values and unescaping" do
+          expect(subject).to eq({ "_updated" => "1416507086",
                                            "_target" => "http://example.com/path%20with%20spaces",
                                            "_profile" => "erc",
                                            "_erc" => "who: Proust, Marcel\nwhat: Remembrance of Things Past",
@@ -219,14 +219,14 @@ EOS
         end
         context "which is a normal Hash" do
           let(:data) { hsh }
-          it "should set the metadata elements to the hash" do
-            expect(subject.elements).to eq(hsh)
+          it "sets the metadata elements to the hash" do
+            expect(subject).to eq(hsh)
           end
         end
         context "which is a Metadata instance" do
           let(:data) { Metadata.new(hsh) }
-          it "should set the metadata elements to the hash" do
-            expect(subject.elements).to eq(hsh)
+          it "sets the metadata elements to the hash" do
+            expect(subject).to eq(hsh)
           end
         end
       end
