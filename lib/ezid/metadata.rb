@@ -1,4 +1,4 @@
-require "forwardable"
+require "hashie"
 
 module Ezid
   #
@@ -6,135 +6,61 @@ module Ezid
   #
   # @api private
   #
-  class Metadata
-    extend Forwardable
-
-    attr_reader :elements
-
-    def_delegators :elements, :[], :[]=, :each, :clear, :to_h, :empty?
-
-    class << self
-      def metadata_reader(element, alias_as=nil)
-        define_method element do
-          get(element)
-        end
-        if alias_as
-          alias_method alias_as, element
-        end
-      end
-
-      def metadata_writer(element, alias_as=nil)
-        define_method "#{element}=" do |value|
-          set(element, value)
-        end
-        if alias_as
-          alias_method "#{alias_as}=".to_sym, "#{element}=".to_sym
-        end
-      end
-
-      def metadata_accessor(element, alias_as=nil)
-        metadata_reader element, alias_as
-        metadata_writer element, alias_as
-      end
-
-      def metadata_profile(profile, *elements)
-        elements.each do |element|
-          profile_element = [profile, element].join(".")
-          method = [profile, element].join("_")
-
-          define_method method do
-            get(profile_element)
-          end
-
-          define_method "#{method}=" do |value|
-            set(profile_element, value)
-          end
-        end
-      end
-    end
+  class Metadata < Hashie::Mash
 
     # EZID metadata field/value separator
     ANVL_SEPARATOR = ": "
-
+    # EZID metadata field value separator
     ELEMENT_VALUE_SEPARATOR = " | "
-
     # Characters to escape in element values on output to EZID
     # @see http://ezid.cdlib.org/doc/apidoc.html#request-response-bodies
     ESCAPE_VALUES_RE = /[%\r\n]/
-
     # Characters to escape in element names on output to EZID
     # @see http://ezid.cdlib.org/doc/apidoc.html#request-response-bodies
     ESCAPE_NAMES_RE = /[%:\r\n]/
-
     # Character sequence to unescape from EZID
     # @see http://ezid.cdlib.org/doc/apidoc.html#request-response-bodies
     UNESCAPE_RE = /%\h\h/
-
     # A comment line
     COMMENT_RE = /^#.*(\r?\n)?/
-
     # A line continuation
     LINE_CONTINUATION_RE = /\r?\n\s+/
-
     # A line ending
     LINE_ENDING_RE = /\r?\n/
-
     # EZID reserved metadata elements that are read-only
     # @see http://ezid.cdlib.org/doc/apidoc.html#internal-metadata
-    READONLY = %w( _owner _ownergroup _shadows _shadowedby _datacenter _created _updated )
-
-    # EZID metadata profiles - a hash of (profile => elements)
+    READONLY = %w( _owner _ownergroup _shadows _shadowedby _datacenter _created _updated ).freeze
+    # EZID metadata profiles
     # @see http://ezid.cdlib.org/doc/apidoc.html#metadata-profiles
     # @note crossref is not included because it is a simple element
-    PROFILES = {
-      dc: [:creator, :title, :publisher, :date, :type],
-      datacite: [:creator, :title, :publisher, :publicationyear, :resourcetype],
-      erc: [:who, :what, :when]
-    }
-
-    PROFILES.each do |profile, elements|
-      metadata_profile profile, *elements
-    end
-
-    # Accessors for EZID internal metadata elements
-    metadata_accessor :_coowners, :coowners
-    metadata_accessor :_crossref
-    metadata_accessor :_export, :export
-    metadata_accessor :_profile, :profile
-    metadata_accessor :_status, :status
-    metadata_accessor :_target, :target
-
-    # Readers for EZID read-only internal metadata elements
-    metadata_reader :_created
-    metadata_reader :_datacenter, :datacenter
-    metadata_reader :_owner, :owner
-    metadata_reader :_ownergroup, :ownergroup
-    metadata_reader :_shadowedby, :shadowedby
-    metadata_reader :_shadows, :shadows
-    metadata_reader :_updated
-
-    # Accessors for
-    metadata_accessor :crossref
-    metadata_accessor :datacite
-    metadata_accessor :erc
+    PROFILES = %w( dc datacite erc ).freeze
+    RESERVED_ALIASES = [ :coowners=, :export=, :profile=, :status=, :target=,
+                         :coowners, :export, :profile, :status, :target,
+                         :datacenter, :owner, :ownergroup, :shadowedby, :shadows ]
 
     def initialize(data={})
-      @elements = coerce(data)
+      super coerce(data)
+    end
+
+    def elements
+      warn "[DEPRECATION] `elements` is deprecated and will be removed in ezid-client 2.0." \
+           " Use the Ezid::Metadata instance itself instead."
+      self
     end
 
     def created
-      to_time _created
+      to_time(_created)
     end
 
     def updated
-      to_time _updated
+      to_time(_updated)
     end
 
     # Output metadata in EZID ANVL format
     # @see http://ezid.cdlib.org/doc/apidoc.html#request-response-bodies
     # @return [String] the ANVL output
     def to_anvl(include_readonly = true)
-      hsh = elements.dup
+      hsh = to_h
       hsh.reject! { |k, v| READONLY.include?(k) } unless include_readonly
       lines = hsh.map do |name, value|
         element = [escape(ESCAPE_NAMES_RE, name), escape(ESCAPE_VALUES_RE, value)]
@@ -143,33 +69,44 @@ module Ezid
       lines.join("\n").force_encoding(Encoding::UTF_8)
     end
 
-    def inspect
-      "#<#{self.class.name} elements=#{elements.inspect}>"
-    end
-
     def to_s
       to_anvl
     end
 
-    def get(element)
-      self[element.to_s]
-    end
-
-    def set(element, value)
-      self[element.to_s] = value
-    end
-
     protected
 
-    def method_missing(method, *args)
-      return get(method) if args.size == 0
-      if element = method.to_s[/^([^=]+)=$/, 1]
-        return set(element, *args)
+    def method_missing(name, *args, &block)
+      if reserved_alias?(name)
+        reserved_alias(name, *args)
+      elsif profile_accessor?(name)
+        profile_accessor(name, *args)
+      else
+        super
       end
-      super
     end
 
     private
+
+    def reserved_alias?(name)
+      RESERVED_ALIASES.include?(name)
+    end
+
+    def reserved_alias(name, *args)
+      send("_#{name}", *args)
+    end
+
+    def profile_accessor?(name)
+      PROFILES.include? name.to_s.split("_").first
+    end
+
+    def profile_accessor(name, *args)
+      key = name.to_s.sub("_", ".")
+      if key.end_with?("=")
+        self[key[0..-2]] = args.first
+      else
+        self[key]
+      end
+    end
 
     def to_time(value)
       time = value.to_i
