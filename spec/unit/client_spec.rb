@@ -60,7 +60,7 @@ EOS
         let(:http_response) { double(body: "success: ark:/99999/fk4fn19h88") }
         context "and the :default_shoulder config option is set" do
           before do
-            allow(MintIdentifierRequest).to receive(:execute).with(subject, TEST_ARK_SHOULDER, nil) { stub_response } 
+            allow(MintIdentifierRequest).to receive(:execute).with(subject, TEST_ARK_SHOULDER, nil) { stub_response }
             allow(Client.config).to receive(:default_shoulder) { TEST_ARK_SHOULDER }
           end
           it "should use the default shoulder" do
@@ -71,7 +71,7 @@ EOS
         context "and the :default_shoulder config option is not set" do
           before { allow(Client.config).to receive(:default_shoulder) { nil } }
           it "should raise an exception" do
-            expect { subject.mint_identifier }.to raise_error
+            expect { subject.mint_identifier }.to raise_error(Error)
           end
         end
       end
@@ -153,7 +153,7 @@ EOS
     describe "error handling" do
       let(:http_response) { double(body: "error: bad request - no such identifier") }
       it "should raise an exception" do
-        expect { subject.get_identifier_metadata("invalid") }.to raise_error
+        expect { subject.get_identifier_metadata("invalid") }.to raise_error(Error)
       end
     end
   end

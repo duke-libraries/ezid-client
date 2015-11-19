@@ -36,7 +36,7 @@ module Ezid
       # @raise [Ezid::Error] if the identifier does not exist in EZID
       def find(id)
         identifier = new(id: id)
-        identifier.reload
+        identifier.load_metadata
       end
     end
 
@@ -65,10 +65,10 @@ module Ezid
     end
 
     # Returns the identifier metadata
-    # @param refresh [Boolean] - flag to refresh the metadata from EZID if stale (default: `true`)
+    # @param load [Boolean] - flag to load the metadata from EZID if stale (default: `true`)
     # @return [Ezid::Metadata] the metadata
-    def metadata(refresh = true)
-      refresh_metadata if refresh && stale?
+    def metadata(load = true)
+      load_metadata if load && stale?
       @metadata
     end
 
@@ -114,11 +114,19 @@ module Ezid
       save
     end
 
-    # Reloads the metadata from EZID (local changes will be lost!)
+    # @deprecated Use {#load_metadata} instead.
+    def reload
+      warn "[DEPRECATION] `reload` is deprecated and will be removed in version 2.0. Use `load_metadata` instead."
+      load_metadata
+    end
+
+    # Loads the metadata from EZID (local changes will be lost!)
     # @return [Ezid::Identifier] the identifier
     # @raise [Ezid::Error]
-    def reload
-      refresh_metadata
+    def load_metadata
+      response = client.get_identifier_metadata(id)
+      self.metadata = Metadata.new(response.metadata)
+      self.state = :persisted
       self
     end
 
@@ -165,10 +173,15 @@ module Ezid
     end
 
     # Mark the identifier as unavailable
-    # @param reason [String] an optional reason 
+    # @param reason [String] an optional reason
     # @return [String] the new status
     def unavailable!(reason = nil)
-      raise Error, "Cannot make a reserved identifier unavailable." if persisted? && reserved?
+      if persisted? && reserved?
+        raise Error, "Cannot make a reserved identifier unavailable."
+      end
+      if unavailable? and reason.nil?
+        return
+      end
       value = UNAVAILABLE
       if reason
         value += " | #{reason}"
@@ -194,12 +207,6 @@ module Ezid
 
     def stale?
       persisted? && metadata(false).empty?
-    end
-
-    def refresh_metadata
-      response = client.get_identifier_metadata(id)
-      self.metadata = Metadata.new response.metadata
-      self.state = :persisted
     end
 
     def clear_metadata

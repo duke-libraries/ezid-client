@@ -15,7 +15,7 @@ module Ezid
         expect(retrieved.metadata).to match(/dc.title: Test/)
         deleted = client.delete_identifier(@id)
         expect(deleted).to be_success
-        expect { client.get_identifier_metadata(@id) }.to raise_error
+        expect { client.get_identifier_metadata(@id) }.to raise_error(Error)
       end
     end
 

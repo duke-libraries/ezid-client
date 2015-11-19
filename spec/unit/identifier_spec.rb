@@ -3,23 +3,17 @@ module Ezid
 
     describe ".create" do
       let(:attrs) { {shoulder: TEST_ARK_SHOULDER, profile: "dc", target: "http://example.com"} }
-      it "should instantiate a new Identifier and save it" do
+      it "instantiates a new Identifier and saves it" do
         expect(described_class).to receive(:new).with(attrs).and_call_original
         expect_any_instance_of(described_class).to receive(:save) { double }
         described_class.create(attrs)
       end
-      describe "when given neither an id nor a shoulder" do
-        before { allow(described_class).to receive(:defaults) {} }
-        it "should raise an exception" do
-          expect { described_class.create }.to raise_error
-        end
-      end
     end
 
     describe ".find" do
-      it "should instantiate a new identifier and reload" do
+      it "instantiates a new identifier and loads the metadata" do
         expect(described_class).to receive(:new).with(id: "id").and_call_original
-        expect_any_instance_of(described_class).to receive(:reload) { double }
+        expect_any_instance_of(described_class).to receive(:load_metadata) { double }
         described_class.find("id")
       end
     end
@@ -27,7 +21,7 @@ module Ezid
     describe ".defaults" do
       before { @original_defaults = described_class.defaults }
       after { described_class.defaults = @original_defaults }
-      it "should be settable via client config" do
+      it "can be set via client config" do
         Client.config.identifier.defaults = {status: "reserved"}
         expect(described_class.defaults).to eq({status: "reserved"})
       end
@@ -37,14 +31,14 @@ module Ezid
       describe "with metadata" do
         describe "via the :metadata argument" do
           subject { described_class.new(metadata: "_profile: dc\n_target: http://example.com") }
-          it "should set the metadata" do
+          it "sets the metadata" do
             expect(subject.profile).to eq("dc")
             expect(subject.target).to eq("http://example.com")
           end
         end
         describe "via keyword arguments" do
           subject { described_class.new(profile: "dc", target: "http://example.com") }
-          it "should set the metadata" do
+          it "sets the metadata" do
             expect(subject.profile).to eq("dc")
             expect(subject.target).to eq("http://example.com")
           end
@@ -54,13 +48,13 @@ module Ezid
         before do
           allow(described_class).to receive(:defaults) { {profile: "dc", status: "reserved"} }
         end
-        it "should set the default metadata" do
+        it "sets the default metadata" do
           expect(subject.profile).to eq("dc")
           expect(subject.status).to eq("reserved")
         end
         context "when explicit arguments override the defaults" do
           subject { described_class.new(shoulder: TEST_ARK_SHOULDER, status: "public") }
-          it "should override the defaults" do
+          it "overrides the defaults" do
             expect(subject.profile).to eq("dc")
             expect(subject.status).to eq("public")
           end
@@ -71,7 +65,7 @@ module Ezid
     describe "#update" do
       let(:metadata) { {"status" => "unavailable"} }
       subject { described_class.new(id: "id") }
-      it "should update the metadata and save" do
+      it "updates the metadata and saves" do
         expect(subject).to receive(:update_metadata).with(metadata)
         expect(subject).to receive(:save) { double }
         subject.update(metadata)
@@ -79,25 +73,25 @@ module Ezid
     end
 
     describe "#update_metadata" do
-      it "should update the metadata" do
+      it "updates the metadata" do
         subject.update_metadata(:status => "public", _target: "localhost", "dc.creator" => "Me")
         expect(subject.metadata.to_h).to eq({"_status"=>"public", "_target"=>"localhost", "dc.creator"=>"Me"})
       end
     end
 
-    describe "#reload" do
+    describe "#load_metadata" do
       let(:metadata) { "_profile: erc" }
       before { allow(subject).to receive(:id) { "id" } }
-      it "should reinitialize the metadata from EZID" do
+      it "initializes the metadata from EZID" do
         expect(subject.client).to receive(:get_identifier_metadata).with("id") { double(id: "id", metadata: metadata) }
         expect(Metadata).to receive(:new).with(metadata)
-        subject.reload
+        subject.load_metadata
       end
     end
 
     describe "#reset" do
       before { subject.metadata = Metadata.new(status: "public") }
-      it "should clear the local metadata" do
+      it "clears the local metadata" do
         expect { subject.reset }.to change { subject.metadata.empty? }.from(false).to(true)
       end
     end
@@ -108,16 +102,16 @@ module Ezid
       end
       describe "when saving an unpersisted object" do
         before { allow(subject).to receive(:create_or_mint) { nil } }
-        it "should mark it as persisted" do
+        it "marks it as persisted" do
           expect { subject.save }.to change(subject, :persisted?).from(false).to(true)
         end
       end
       describe "when saving a persisted object" do
         before do
           allow(subject).to receive(:persisted?) { true }
-          allow(subject).to receive(:modify) { nil } 
+          allow(subject).to receive(:modify) { nil }
         end
-        it "should not change the persisted status" do
+        it "does not change the persisted status" do
           expect { subject.save }.not_to change(subject, :persisted?)
         end
       end
@@ -128,23 +122,23 @@ module Ezid
         subject { described_class.new(id: "id", status: Identifier::RESERVED) }
         context "and is persisted" do
           before { allow(subject).to receive(:persisted?) { true } }
-          it "should delete the identifier" do
+          it "deletes the identifier" do
             expect(subject.client).to receive(:delete_identifier).with("id") { double(id: "id") }
             subject.delete
             expect(subject).to be_deleted
-          end          
+          end
         end
         context "and is not persisted" do
           before { allow(subject).to receive(:persisted?) { false } }
-          it "should raise an exception" do
-            expect { subject.delete }.to raise_error
+          it "raises an exception" do
+            expect { subject.delete }.to raise_error(Error)
           end
         end
       end
       context "when identifier is not reserved" do
         subject { described_class.new(id: "id", status: Identifier::PUBLIC) }
-        it "should raise an exception" do
-          expect { subject.delete }.to raise_error
+        it "raises an exception" do
+          expect { subject.delete }.to raise_error(Error)
         end
       end
     end
@@ -157,7 +151,7 @@ module Ezid
           allow(subject).to receive(:persisted?) { true }
           allow(subject).to receive(:metadata) { metadata }
         end
-        it "should modify the identifier" do
+        it "modifies the identifier" do
           expect(subject.client).to receive(:modify_identifier).with("id", metadata) { double(id: "id") }
           subject.save
         end
@@ -168,7 +162,7 @@ module Ezid
         end
         context "and `id' is present" do
           before { allow(subject).to receive(:id) { "id" } }
-          it "should create the identifier" do
+          it "creates the identifier" do
             expect(subject.client).to receive(:create_identifier).with("id", subject.metadata) { double(id: "id") }
             subject.save
           end
@@ -176,15 +170,15 @@ module Ezid
         context "and `id' is not present" do
           context "and `shoulder' is present" do
             before { allow(subject).to receive(:shoulder) { TEST_ARK_SHOULDER } }
-            it "should mint the identifier" do
+            it "mints the identifier" do
               expect(subject.client).to receive(:mint_identifier).with(TEST_ARK_SHOULDER, subject.metadata) { double(id: "id") }
               subject.save
             end
           end
           context "and `shoulder' is not present" do
             before { allow(Client.config).to receive(:default_shoulder) { nil } }
-            it "should raise an exception" do
-              expect { subject.save }.to raise_error
+            it "raises an exception" do
+              expect { subject.save }.to raise_error(Error)
             end
           end
         end
@@ -221,31 +215,57 @@ module Ezid
     end
 
     describe "status-changing methods" do
+      subject { described_class.new(id: "id", status: status) }
       describe "#unavailable!" do
-        context "when the identifier is reserved" do
-          subject { described_class.new(id: "id", status: Identifier::RESERVED) }
+        context "when the status is \"unavailable\"" do
+          let(:status) { "#{Identifier::UNAVAILABLE} | whatever" }
+          context "and no reason is given" do
+            it "logs a warning" do
+              pending "https://github.com/duke-libraries/ezid-client/issues/46"
+              allow_message_expectations_on_nil
+              expect(subject.logger).to receive(:warn)
+              subject.unavailable!
+            end
+            it "does not change the status" do
+              expect { subject.unavailable! }.not_to change(subject, :status)
+            end
+          end
+          context "and a reason is given" do
+            it "logs a warning" do
+              pending "https://github.com/duke-libraries/ezid-client/issues/46"
+              allow_message_expectations_on_nil
+              expect(subject.logger).to receive(:warn)
+              subject.unavailable!("because")
+            end
+            it "should change the status" do
+              expect { subject.unavailable!("because") }.to change(subject, :status).from(status).to("#{Identifier::UNAVAILABLE} | because")
+            end
+          end
+        end
+        context "when the status is \"reserved\"" do
+          let(:status) { Identifier::RESERVED }
           context "and persisted" do
             before { allow(subject).to receive(:persisted?) { true } }
-            it "should raise an exception" do
-              expect { subject.unavailable! }.to raise_error
+            it "raises an exception" do
+              expect { subject.unavailable! }.to raise_error(Error)
             end
           end
           context "and not persisted" do
             before { allow(subject).to receive(:persisted?) { false } }
-            it "should changed the status" do
+            it "changes the status" do
               expect { subject.unavailable! }.to change(subject, :status).from(Identifier::RESERVED).to(Identifier::UNAVAILABLE)
             end
           end
         end
-        context "when the identifier is public" do
-          subject { described_class.new(id: "id", status: Identifier::PUBLIC) }
+        context "when the status is \"public\"" do
+          let(:status) { Identifier::PUBLIC }
           context "and no reason is given" do
-            it "should change the status" do
+            it "changes the status" do
               expect { subject.unavailable! }.to change(subject, :status).from(Identifier::PUBLIC).to(Identifier::UNAVAILABLE)
             end
           end
           context "and a reason is given" do
-            it "should change the status and append the reason" do
+            it "changes the status and appends the reason" do
               expect { subject.unavailable!("withdrawn") }.to change(subject, :status).from(Identifier::PUBLIC).to("#{Identifier::UNAVAILABLE} | withdrawn")
             end
           end
@@ -253,7 +273,7 @@ module Ezid
       end
       describe "#public!" do
         subject { described_class.new(id: "id", status: Identifier::UNAVAILABLE) }
-        it "should change the status" do
+        it "changes the status" do
           expect { subject.public! }.to change(subject, :status).from(Identifier::UNAVAILABLE).to(Identifier::PUBLIC)
         end
       end

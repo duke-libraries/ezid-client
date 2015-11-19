@@ -4,6 +4,7 @@ require_relative "configuration"
 require_relative "session"
 require_relative "metadata"
 require_relative "identifier"
+require_relative "proxy_identifier"
 require_relative "error"
 
 Dir[File.expand_path("../responses/*.rb", __FILE__)].each { |m| require m }
@@ -202,7 +203,7 @@ module Ezid
       message = "EZID #{request_name} -- #{response.status_line}"
       logger.log(log_level, message)
       raise response.exception if response.exception
-      response      
+      response
     end
 
     def execute(request_class, *args)

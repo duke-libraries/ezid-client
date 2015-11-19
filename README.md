@@ -288,6 +288,8 @@ A convenience method `ezid_test_mode!` is provided to configure the client to:
 - use `TEST_ARK_SHOULDER` as the default shoulder
 - log to the null device (instead of default STDERR)
 
+See also https://github.com/duke-libraries/ezid-client/wiki/Mock-Identifier for an example of a mock identifier object.
+
 ## Running the ezid-client tests
 
 See http://ezid.cdlib.org/doc/apidoc.html#testing-the-api.
