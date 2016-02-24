@@ -113,21 +113,24 @@ I, [2014-12-04T15:12:48.853964 #86734]  INFO -- : EZID DeleteIdentifier -- succe
 
 ## Batch Download
 
-Instantiate an `Ezid::Client` and call `batch_download` with hash options -- see http://ezid.cdlib.org/doc/apidoc.html#parameters. Repeated values should be given as an array value for the parameter key.
-
-Note that, due to the asynchronous nature of this request, the response only returns the URL at which the batch will be available to download (as described in the EZID documentation). Use the `notify` option to specify one or more email addresses to receive notification when the download file is actually available.
-
-**Example**
+See http://ezid.cdlib.org/doc/apidoc.html#parameters. Repeated values should be given as an array value for the parameter key.
 
 ```
->> c = Ezid::Client.new
-=> #<Ezid::Client connection=#<Net::HTTP ezid.cdlib.org:443 open=false> user="eziduser" session=CLOSED>
->> response = c.batch_download(format: "csv", notify: "eziduser@example.com", column: ["_id", "_target", "_status", "_profile", "_export", "_created", "_updated"], convertTimestamps: "yes", permanence: "real", owner: "eziduser")
-I, [2015-02-20T15:16:53.462660 #55850]  INFO -- : EZID BatchDownload -- success: http://ezid.cdlib.org/download/473deecb96.csv.gz
-=> #<Net::HTTPOK 200 OK readbody=true>
->> response.download_url
-=> "http://ezid.cdlib.org/download/da543b91a0.csv.gz"
-```
+>> batch = Ezid::BatchDownload.new(:csv)
+ => #<Ezid::BatchDownload format=:csv>
+>> batch.column = ["_id", "_target"]
+ => ["_id", "_target"]
+>> batch.createdAfter = Date.today.to_time
+ => 2016-02-24 00:00:00 -0500
+>> batch
+ => #<Ezid::BatchDownload column=["_id", "_target"] createdAfter=1456290000 format=:csv>
+>> batch.download_url
+I, [2016-02-24T18:03:40.828005 #1084]  INFO -- : EZID BatchDownload -- success: http://ezid.cdlib.org/download/4a63401e17.csv.gz
+ => "http://ezid.cdlib.org/download/4a63401e17.csv.gz"
+>> batch.download_file
+File successfully download to /current/working/directory/4a63401e17.csv.gz.
+ => nil
+ ```
 
 ## Metadata handling
 
