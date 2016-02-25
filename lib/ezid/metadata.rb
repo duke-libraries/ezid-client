@@ -1,4 +1,5 @@
 require "hashie"
+require_relative "reserved_metadata"
 
 module Ezid
   #
@@ -7,6 +8,7 @@ module Ezid
   # @api private
   #
   class Metadata < Hashie::Mash
+    include ReservedMetadata
 
     # EZID metadata field/value separator
     ANVL_SEPARATOR = ": "
@@ -27,11 +29,6 @@ module Ezid
     LINE_CONTINUATION_RE = /\r?\n\s+/
     # A line ending
     LINE_ENDING_RE = /\r?\n/
-    # EZID reserved metadata elements that are read-only
-    # @see http://ezid.cdlib.org/doc/apidoc.html#internal-metadata
-    READONLY = %w(
-      _created _datacenter _owner _ownergroup _shadowedby _shadows _updated
-    ).freeze
     # @api private
     RESERVED_ALIASES = %w(
       coowners datacenter export owner ownergroup
