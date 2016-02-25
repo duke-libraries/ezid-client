@@ -119,7 +119,7 @@ module Ezid
 
     describe "#delete" do
       context "when the identifier is reserved" do
-        subject { described_class.new(id: "id", status: Identifier::RESERVED) }
+        subject { described_class.new(id: "id", status: Status::RESERVED) }
         context "and is persisted" do
           before { allow(subject).to receive(:persisted?) { true } }
           it "deletes the identifier" do
@@ -136,7 +136,7 @@ module Ezid
         end
       end
       context "when identifier is not reserved" do
-        subject { described_class.new(id: "id", status: Identifier::PUBLIC) }
+        subject { described_class.new(id: "id", status: Status::PUBLIC) }
         it "raises an exception" do
           expect { subject.delete }.to raise_error(Error)
         end
@@ -193,7 +193,7 @@ module Ezid
         it { is_expected.not_to be_unavailable }
       end
       context "when the identifier is reserved" do
-        before { subject.status = Identifier::RESERVED }
+        before { subject.status = Status::RESERVED }
         it { is_expected.not_to be_public }
         it { is_expected.to be_reserved }
         it { is_expected.not_to be_unavailable }
@@ -218,7 +218,7 @@ module Ezid
       subject { described_class.new(id: "id", status: status) }
       describe "#unavailable!" do
         context "when the status is \"unavailable\"" do
-          let(:status) { "#{Identifier::UNAVAILABLE} | whatever" }
+          let(:status) { "#{Status::UNAVAILABLE} | whatever" }
           context "and no reason is given" do
             it "logs a warning" do
               pending "https://github.com/duke-libraries/ezid-client/issues/46"
@@ -238,12 +238,12 @@ module Ezid
               subject.unavailable!("because")
             end
             it "should change the status" do
-              expect { subject.unavailable!("because") }.to change(subject, :status).from(status).to("#{Identifier::UNAVAILABLE} | because")
+              expect { subject.unavailable!("because") }.to change(subject, :status).from(status).to("#{Status::UNAVAILABLE} | because")
             end
           end
         end
         context "when the status is \"reserved\"" do
-          let(:status) { Identifier::RESERVED }
+          let(:status) { Status::RESERVED }
           context "and persisted" do
             before { allow(subject).to receive(:persisted?) { true } }
             it "raises an exception" do
@@ -253,28 +253,28 @@ module Ezid
           context "and not persisted" do
             before { allow(subject).to receive(:persisted?) { false } }
             it "changes the status" do
-              expect { subject.unavailable! }.to change(subject, :status).from(Identifier::RESERVED).to(Identifier::UNAVAILABLE)
+              expect { subject.unavailable! }.to change(subject, :status).from(Status::RESERVED).to(Status::UNAVAILABLE)
             end
           end
         end
         context "when the status is \"public\"" do
-          let(:status) { Identifier::PUBLIC }
+          let(:status) { Status::PUBLIC }
           context "and no reason is given" do
             it "changes the status" do
-              expect { subject.unavailable! }.to change(subject, :status).from(Identifier::PUBLIC).to(Identifier::UNAVAILABLE)
+              expect { subject.unavailable! }.to change(subject, :status).from(Status::PUBLIC).to(Status::UNAVAILABLE)
             end
           end
           context "and a reason is given" do
             it "changes the status and appends the reason" do
-              expect { subject.unavailable!("withdrawn") }.to change(subject, :status).from(Identifier::PUBLIC).to("#{Identifier::UNAVAILABLE} | withdrawn")
+              expect { subject.unavailable!("withdrawn") }.to change(subject, :status).from(Status::PUBLIC).to("#{Status::UNAVAILABLE} | withdrawn")
             end
           end
         end
       end
       describe "#public!" do
-        subject { described_class.new(id: "id", status: Identifier::UNAVAILABLE) }
+        subject { described_class.new(id: "id", status: Status::UNAVAILABLE) }
         it "changes the status" do
-          expect { subject.public! }.to change(subject, :status).from(Identifier::UNAVAILABLE).to(Identifier::PUBLIC)
+          expect { subject.public! }.to change(subject, :status).from(Status::UNAVAILABLE).to(Status::PUBLIC)
         end
       end
     end

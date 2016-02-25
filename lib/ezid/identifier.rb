@@ -14,11 +14,6 @@ module Ezid
     # Attributes to display on inspect
     INSPECT_ATTRS = %w( id status target created ).freeze
 
-    # EZID status terms
-    PUBLIC = "public".freeze
-    RESERVED = "reserved".freeze
-    UNAVAILABLE = "unavailable".freeze
-
     class << self
       attr_accessor :defaults
 
@@ -151,19 +146,19 @@ module Ezid
     # Is the identifier reserved?
     # @return [Boolean]
     def reserved?
-      status == RESERVED
+      status == Status::RESERVED
     end
 
     # Is the identifier public?
     # @return [Boolean]
     def public?
-      status == PUBLIC
+      status == Status::PUBLIC
     end
 
     # Is the identifier unavailable?
     # @return [Boolean]
     def unavailable?
-      status =~ /^#{UNAVAILABLE}/
+      status.to_s.start_with? Status::UNAVAILABLE
     end
 
     # Is the identifier deletable?
@@ -182,7 +177,7 @@ module Ezid
       if unavailable? and reason.nil?
         return
       end
-      value = UNAVAILABLE
+      value = Status::UNAVAILABLE
       if reason
         value += " | #{reason}"
       end
@@ -192,7 +187,7 @@ module Ezid
     # Mark the identifier as public
     # @return [String] the new status
     def public!
-      self.status = PUBLIC
+      self.status = Status::PUBLIC
     end
 
     protected

@@ -1,4 +1,5 @@
 require "hashie"
+require_relative "reserved_metadata"
 
 module Ezid
   #
@@ -7,6 +8,7 @@ module Ezid
   # @api private
   #
   class Metadata < Hashie::Mash
+    include ReservedMetadata
 
     # EZID metadata field/value separator
     ANVL_SEPARATOR = ": "
@@ -27,16 +29,11 @@ module Ezid
     LINE_CONTINUATION_RE = /\r?\n\s+/
     # A line ending
     LINE_ENDING_RE = /\r?\n/
-    # EZID reserved metadata elements that are read-only
-    # @see http://ezid.cdlib.org/doc/apidoc.html#internal-metadata
-    READONLY = %w( _owner _ownergroup _shadows _shadowedby _datacenter _created _updated ).freeze
-    # EZID metadata profiles
-    # @see http://ezid.cdlib.org/doc/apidoc.html#metadata-profiles
-    # @note crossref is not included because it is a simple element
-    PROFILES = %w( dc datacite erc ).freeze
-    RESERVED_ALIASES = [ :coowners=, :export=, :profile=, :status=, :target=,
-                         :coowners, :export, :profile, :status, :target,
-                         :datacenter, :owner, :ownergroup, :shadowedby, :shadows ]
+    # @api private
+    RESERVED_ALIASES = %w(
+      coowners datacenter export owner ownergroup
+      profile shadowedby shadows status target
+    ).freeze
 
     def initialize(data={})
       super coerce(data)
@@ -75,38 +72,19 @@ module Ezid
 
     protected
 
-    def method_missing(name, *args, &block)
-      if reserved_alias?(name)
-        reserved_alias(name, *args)
-      elsif profile_accessor?(name)
-        profile_accessor(name, *args)
+    # Overrides Hashie::Mash
+    def convert_key(key)
+      k = super
+      if RESERVED_ALIASES.include?(k)
+        "_#{k}"
+      elsif k =~ /\A(dc|datacite|erc)_/
+        k.sub(/_/, ".")
       else
-        super
+        k
       end
     end
 
     private
-
-    def reserved_alias?(name)
-      RESERVED_ALIASES.include?(name)
-    end
-
-    def reserved_alias(name, *args)
-      send("_#{name}", *args)
-    end
-
-    def profile_accessor?(name)
-      PROFILES.include? name.to_s.split("_").first
-    end
-
-    def profile_accessor(name, *args)
-      key = name.to_s.sub("_", ".")
-      if key.end_with?("=")
-        self[key[0..-2]] = args.first
-      else
-        self[key]
-      end
-    end
 
     def to_time(value)
       time = value.to_i
