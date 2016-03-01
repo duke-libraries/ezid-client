@@ -1,7 +1,6 @@
 require "hashie"
 require "net/http"
 require "uri"
-require_relative "reserved_metadata"
 
 module Ezid
   class BatchDownloadError < Error; end

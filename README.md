@@ -27,17 +27,17 @@ Or install it yourself as:
 
 [Mint an identifier on a shoulder](http://ezid.cdlib.org/doc/apidoc.html#operation-mint-identifier)
 
+*Added in v1.4.0:* `Ezid::Identifier.mint` class method.
+
 ```
->> identifier = Ezid::Identifier.create(shoulder: "ark:/99999/fk4")
-I, [2014-12-04T15:06:02.428445 #86655]  INFO -- : EZID MintIdentifier -- success: ark:/99999/fk4rx9d523
-I, [2014-12-04T15:06:03.249793 #86655]  INFO -- : EZID GetIdentifierMetadata -- success: ark:/99999/fk4rx9d523
-=> #<Ezid::Identifier id="ark:/99999/fk4rx9d523" status="public" target="http://ezid.cdlib.org/id/ark:/99999/fk4rx9d523" created="2014-12-04 20:06:02 UTC">
->> identifier.id
-=> "ark:/99999/fk4rx9d523"
+>> identifier = Ezid::Identifier.mint("ark:/99999/fk4")
+I, [2016-03-01T22:20:08.505323 #35148]  INFO -- : EZID MintIdentifier -- success: ark:/99999/fk4tq65d6k
+=> #<Ezid::Identifier id=ark:/99999/fk4tq65d6k>
 >> identifier.status
+I, [2016-03-01T22:20:22.323650 #35148]  INFO -- : EZID GetIdentifierMetadata -- success: ark:/99999/fk4tq65d6k
 => "public"
 >> identifier.target
-=> "http://ezid.cdlib.org/id/ark:/99999/fk4rx9d523"
+=> "http://ezid.cdlib.org/id/ark:/99999/fk4tq65d6k"
 ```
 
 A default shoulder can be configured:
@@ -59,19 +59,19 @@ end
 New identifiers will then be minted on the default shoulder when a shoulder is not specified:
 
 ```
->> identifier = Ezid::Identifier.create
+>> identifier = Ezid::Identifier.mint
 I, [2014-12-09T11:22:34.499860 #32279]  INFO -- : EZID MintIdentifier -- success: ark:/99999/fk43f4wd4v
-I, [2014-12-09T11:22:35.317181 #32279]  INFO -- : EZID GetIdentifierMetadata -- success: ark:/99999/fk43f4wd4v
-=> #<Ezid::Identifier id="ark:/99999/fk43f4wd4v" status="public" target="http://ezid.cdlib.org/id/ark:/99999/fk43f4wd4v" created="2014-12-09 16:22:35 UTC">
+=> #<Ezid::Identifier id="ark:/99999/fk43f4wd4v">
 ```
 
 [Create a specific identifier](http://ezid.cdlib.org/doc/apidoc.html#operation-create-identifier)
 
+*Changed in v1.4.0:* `Ezid::Identifier.create` now expects the first argument to be the identifier (String) to create; the second optional argument is a hash of metadata elements. Passing the identifier in an `:id` hash option is deprecated and will be removed in v2.0. The `:shoulder` hash option is likewise deprecated; use `Ezid::Identifier.mint(shoulder, metadata)` instead.
+
 ```
->> identifier = Ezid::Identifier.create(id: "ark:/99999/fk4rx9d523/12345")
+>> identifier = Ezid::Identifier.create("ark:/99999/fk4rx9d523/12345")
 I, [2014-12-09T11:21:42.077297 #32279]  INFO -- : EZID CreateIdentifier -- success: ark:/99999/fk4rx9d523/12345
-I, [2014-12-09T11:21:42.808534 #32279]  INFO -- : EZID GetIdentifierMetadata -- success: ark:/99999/fk4rx9d523/12345
-=> #<Ezid::Identifier id="ark:/99999/fk4rx9d523/12345" status="public" target="http://ezid.cdlib.org/id/ark:/99999/fk4rx9d523/12345" created="2014-12-09 16:21:42 UTC">
+=> #<Ezid::Identifier id="ark:/99999/fk4rx9d523/12345">
 ```
 
 **Retrieve** (Get Metadata)
@@ -91,29 +91,33 @@ I, [2014-12-04T15:07:00.648676 #86655]  INFO -- : EZID GetIdentifierMetadata -- 
 => "http://example.com"
 >> identifier.save
 I, [2014-12-09T11:24:26.321801 #32279]  INFO -- : EZID ModifyIdentifier -- success: ark:/99999/fk43f4wd4v
-I, [2014-12-09T11:24:27.039288 #32279]  INFO -- : EZID GetIdentifierMetadata -- success: ark:/99999/fk43f4wd4v
-=> #<Ezid::Identifier id="ark:/99999/fk43f4wd4v" status="public" target="http://example.com" created="2014-12-09 16:22:35 UTC">
+=> #<Ezid::Identifier id="ark:/99999/fk43f4wd4v">
 >> identifier.target
+I, [2014-12-09T11:24:27.039288 #32279]  INFO -- : EZID GetIdentifierMetadata -- success: ark:/99999/fk43f4wd4v
 => "http://example.com"
 ```
+
+*Added in v1.4.0:* `Ezid::Identifier.modify(id, metadata)` class method. In support of more efficient updating of known identifiers, this method skips the GetIdentifierMetadata request used by `.find`. The operation will raise the `Ezid::IdentifierNotFoundError` if the EZID identifier does not exist.
 
 **Delete**
 
 *Identifier status must be "reserved" to delete.* http://ezid.cdlib.org/doc/apidoc.html#operation-delete-identifier
 
 ```
->> identifier = Ezid::Identifier.create(shoulder: "ark:/99999/fk4", status: "reserved")
-I, [2014-12-04T15:12:39.976930 #86734]  INFO -- : EZID MintIdentifier -- success: ark:/99999/fk4n58pc0r
-I, [2014-12-04T15:12:40.693256 #86734]  INFO -- : EZID GetIdentifierMetadata -- success: ark:/99999/fk4n58pc0r
-=> #<Ezid::Identifier id="ark:/99999/fk4n58pc0r" status="reserved" target="http://ezid.cdlib.org/id/ark:/99999/fk4n58pc0r" created="2014-12-04 20:12:39 UTC">
+>> identifier = Ezid::Identifier.mint("ark:/99999/fk4", status: "reserved")
+I, [2016-03-01T22:26:08.645858 #36701]  INFO -- : EZID MintIdentifier -- success: ark:/99999/fk4pz5fm1b
+=> #<Ezid::Identifier id=ark:/99999/fk4pz5fm1b>
 >> identifier.delete
-I, [2014-12-04T15:12:48.853964 #86734]  INFO -- : EZID DeleteIdentifier -- success: ark:/99999/fk4n58pc0r
-=> #<Ezid::Identifier id="ark:/99999/fk4n58pc0r" DELETED>
+I, [2016-03-01T22:26:14.829731 #36701]  INFO -- : EZID GetIdentifierMetadata -- success: ark:/99999/fk4pz5fm1b
+I, [2016-03-01T22:26:15.711390 #36701]  INFO -- : EZID DeleteIdentifier -- success: ark:/99999/fk4pz5fm1b
+=> #<Ezid::Identifier id=ark:/99999/fk4pz5fm1b [DELETED]>
 ```
 
 ## Batch Download
 
 See http://ezid.cdlib.org/doc/apidoc.html#parameters. Repeated values should be given as an array value for the parameter key.
+
+*Added in v1.3.0:* `Ezid::BatchDownload` class.
 
 ```
 >> batch = Ezid::BatchDownload.new(:csv)
@@ -160,33 +164,6 @@ Notes:
 ```
 
 Accessors are also implemented for the `crossref`, `datacite`, and `erc` elements as described in the EZID API documentation.
-
-**Setting default metadata values**
-
-Default metadata values can be set:
-
-```ruby
-Ezid::Client.configure do |config|
-  # set multiple defaults with a hash
-  config.identifier.defaults = {status: "reserved", profile: "dc"}
-  # or set individual elements
-  config.identifier.defaults[:status] = "reserved"
-  config.identifier.defaults[:profile] = "dc"
-end
-```
-
-Then new identifiers will receive the defaults:
-
-```
->> identifier = Ezid::Identifier.create(shoulder: "ark:/99999/fk4")
-I, [2014-12-09T11:38:37.335136 #32279]  INFO -- : EZID MintIdentifier -- success: ark:/99999/fk4zs2w500
-I, [2014-12-09T11:38:38.153546 #32279]  INFO -- : EZID GetIdentifierMetadata -- success: ark:/99999/fk4zs2w500
-=> #<Ezid::Identifier id="ark:/99999/fk4zs2w500" status="reserved" target="http://ezid.cdlib.org/id/ark:/99999/fk4zs2w500" created="2014-12-09 16:38:38 UTC">
->> identifier.profile
-=> "dc"
->> identifier.status
-=> "reserved"
-```
 
 ## Authentication
 

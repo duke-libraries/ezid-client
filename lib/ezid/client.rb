@@ -6,7 +6,6 @@ require_relative "configuration"
 require_relative "session"
 require_relative "metadata"
 require_relative "identifier"
-require_relative "proxy_identifier"
 require_relative "batch_download"
 
 Dir[File.expand_path("../responses/*.rb", __FILE__)].each { |m| require m }

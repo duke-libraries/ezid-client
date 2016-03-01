@@ -1,5 +1,4 @@
 require "hashie"
-require_relative "reserved_metadata"
 
 module Ezid
   #
@@ -8,7 +7,6 @@ module Ezid
   # @api private
   #
   class Metadata < Hashie::Mash
-    include ReservedMetadata
 
     # EZID metadata field/value separator
     ANVL_SEPARATOR = ": "
@@ -30,13 +28,35 @@ module Ezid
     # A line ending
     LINE_ENDING_RE = /\r?\n/
     # @api private
-    RESERVED_ALIASES = %w(
-      coowners datacenter export owner ownergroup
-      profile shadowedby shadows status target
-    ).freeze
 
-    def initialize(data={})
-      super coerce(data)
+    #
+    # EZID reserved metadata elements
+    #
+    # @see http://ezid.cdlib.org/doc/apidoc.html#internal-metadata
+    #
+    COOWNERS   = "_coowners".freeze
+    CREATED    = "_created".freeze
+    DATACENTER = "_datacenter".freeze
+    EXPORT     = "_export".freeze
+    OWNER      = "_owner".freeze
+    OWNERGROUP = "_ownergroup".freeze
+    PROFILE    = "_profile".freeze
+    SHADOWEDBY = "_shadowedby".freeze
+    SHADOWS    = "_shadows".freeze
+    STATUS     = "_status".freeze
+    TARGET     = "_target".freeze
+    UPDATED    = "_updated".freeze
+    RESERVED = [
+      COOWNERS, CREATED, DATACENTER, EXPORT, OWNER, OWNERGROUP,
+      PROFILE, SHADOWEDBY, SHADOWS, STATUS, TARGET, UPDATED
+    ].freeze
+    READONLY = [
+      CREATED, DATACENTER, OWNER, OWNERGROUP, SHADOWEDBY, SHADOWS, UPDATED
+    ].freeze
+
+    def initialize(data=nil)
+      super()
+      update(data) if data
     end
 
     def elements
@@ -51,6 +71,14 @@ module Ezid
 
     def updated
       to_time(_updated)
+    end
+
+    def update(data)
+      super coerce(data)
+    end
+
+    def replace(data)
+      super coerce(data)
     end
 
     # Output metadata in EZID ANVL format
@@ -74,13 +102,13 @@ module Ezid
 
     # Overrides Hashie::Mash
     def convert_key(key)
-      k = super
-      if RESERVED_ALIASES.include?(k)
-        "_#{k}"
-      elsif k =~ /\A(dc|datacite|erc)_/
-        k.sub(/_/, ".")
+      converted = super
+      if RESERVED.include?("_#{converted}")
+        "_#{converted}"
+      elsif converted =~ /\A(dc|datacite|erc)_/
+        converted.sub(/_/, ".")
       else
-        k
+        converted
       end
     end
 
@@ -93,9 +121,7 @@ module Ezid
 
     # Coerce data into a Hash of elements
     def coerce(data)
-      data.to_h
-    rescue NoMethodError
-      coerce_string(data)
+      data.respond_to?(:to_h) ? data.to_h : coerce_string(data)
     end
 
     # Escape string for sending to EZID host
