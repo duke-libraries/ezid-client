@@ -59,13 +59,24 @@ module Ezid
     # Returns an exception instance if there was an error
     # @return [Ezid::Error] the exception
     def exception
-      @exception ||= (error? && Error.new(message))
+      error_class.new(message) if error?
     end
 
     # The URI path of the request
     # @return [String] the path
     def uri_path
       __getobj__.uri.path
+    end
+
+    def error_class
+      case message
+      when /no such identifier/
+        IdentifierNotFoundError
+      when /identifier status does not support deletion/
+        DeletionError
+      else
+        Error
+      end
     end
 
   end

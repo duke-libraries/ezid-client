@@ -1,51 +1,47 @@
 module Ezid
   RSpec.describe Identifier do
 
+    before {
+      @identifier = described_class.mint(TEST_ARK_SHOULDER, target: "http://example.com")
+    }
+
     describe "CRUD operations" do
+      describe "mint" do
+        subject { @identifier }
+        it { is_expected.to be_a(described_class) }
+      end
       describe "create" do
-        describe "with a shoulder" do
-          subject { described_class.create(shoulder: TEST_ARK_SHOULDER) }
-          it "should mint an identifier" do
-            expect(subject).to be_a(described_class)
-            expect(subject.id).to match(/#{TEST_ARK_SHOULDER}/)
-          end
-        end
-        describe "with an id" do
-          let(:minted) { described_class.create(shoulder: TEST_ARK_SHOULDER) }
-          subject { described_class.create(id: "#{minted}/123") }
-          it "should create the identifier" do
-            expect(subject).to be_a(described_class)
-            expect(subject.id).to eq("#{minted}/123")
-          end
-        end
-      end
-
-      describe "retrieve" do
-        let(:minted) { described_class.create(shoulder: TEST_ARK_SHOULDER, target: "http://example.com") }
-        subject { described_class.find(minted.id) }
-        it "should instantiate the identifier" do
+        subject { described_class.create("#{@identifier}/123") }
+        it "should create the identifier" do
           expect(subject).to be_a(described_class)
-          expect(subject.id).to eq(minted.id)
+          expect(subject.id).to eq("#{@identifier}/123")
+        end
+      end
+      describe "retrieve" do
+        subject { described_class.find(@identifier.id) }
+        it "instantiates the identifier" do
+          expect(subject).to be_a(described_class)
+          expect(subject.id).to eq(@identifier.id)
           expect(subject.target).to eq("http://example.com")
         end
       end
-
       describe "update" do
-        subject { described_class.create(shoulder: TEST_ARK_SHOULDER, target: "http://google.com") }
-        before do
-          subject.target = "http://example.com"
+        specify {
+          subject.target = "http://google.com"
           subject.save
-        end
-        it "should update the metadata" do
-          expect(subject.target).to eq("http://example.com")
-        end
+          expect(subject.target).to eq("http://google.com")
+        }
+        specify {
+          subject.update(target: "http://www.microsoft.com")
+          expect(subject.target).to eq("http://www.microsoft.com")
+        }
       end
-
       describe "delete" do
-        subject { described_class.create(shoulder: TEST_ARK_SHOULDER, status: "reserved") }
-        before { subject.delete }
-        it "should delete the identifier" do
-          expect { described_class.find(subject.id) }.to raise_error(Error)
+        subject { described_class.mint(TEST_ARK_SHOULDER, status: "reserved") }
+        it "deletes the identifier" do
+          subject.delete
+          expect(subject).to be_deleted
+          expect { described_class.find(subject.id) }.to raise_error(IdentifierNotFoundError)
         end
       end
     end
