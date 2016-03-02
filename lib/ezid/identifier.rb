@@ -35,7 +35,7 @@ module Ezid
         end
         if id.nil?
           warn "[DEPRECATION] Calling `create` without an id will raise an exception in 2.0. Use `mint` instead. (called from #{caller.first})"
-          shoulder = metadata.delete(:shoulder)
+          shoulder = metadata ? metadata.delete(:shoulder) : nil
           mint(shoulder, metadata)
         else
           new(id, metadata) { |i| i.save }

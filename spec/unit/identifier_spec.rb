@@ -2,10 +2,31 @@ module Ezid
   RSpec.describe Identifier do
     describe "class methods" do
       describe ".create" do
-        let(:args) { ["id", {profile: "dc", target: "http://example.com"}] }
-        it "instantiates a new Identifier and saves it" do
-          expect_any_instance_of(described_class).to receive(:save) { double(id: "id") }
-          described_class.create(*args)
+        describe "with id and metadata args" do
+          it "instantiates a new Identifier and saves it" do
+            expect_any_instance_of(described_class).to receive(:save) { double(id: "id") }
+            described_class.create("id", profile: "dc", target: "http://example.com")
+          end
+        end
+        describe "with an id arg" do
+          it "instantiates a new Identifier and saves it" do
+            expect_any_instance_of(described_class).to receive(:save) { double(id: "id") }
+            described_class.create("id")
+          end
+        end
+        describe "with a hash metadata arg" do
+          it "mints a new Identifier" do
+            skip "DEPRECATED"
+            expect(described_class).to receive(:mint).with(nil, profile: "dc", target: "http://example.com")
+            described_class.create(profile: "dc", target: "http://example.com")
+          end
+        end
+        describe "with no args" do
+          it "mints a new Identifier" do
+            skip "DEPRECATED"
+            expect(described_class).to receive(:mint).with(nil, nil)
+            described_class.create
+          end
         end
       end
       describe ".mint" do
