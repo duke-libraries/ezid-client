@@ -6,53 +6,111 @@ module Ezid
   #
   class Identifier
 
-    attr_reader :client
-    attr_accessor :id, :shoulder, :metadata, :state
-
-    private :state, :state=, :id=
-
-    # Attributes to display on inspect
-    INSPECT_ATTRS = %w( id status target created ).freeze
+    attr_accessor :id, :shoulder, :persisted, :deleted
+    private :persisted=, :persisted, :deleted=, :deleted
 
     class << self
       attr_accessor :defaults
 
       # Creates or mints an identifier (depending on arguments)
       # @see #save
+      # @overload create(id, metadata=nil)
+      #   Creates an identifier
+      #   @param id [String] the identifier to create
+      #   @param metadata [Hash] the metadata to set on the identifier
+      # @overload create(metadata=nil)
+      #   Mints an identifier
+      #   @deprecated Use {.mint} instead
+      #   @param metadata [Hash] the metadata to set on the identifier
       # @return [Ezid::Identifier] the new identifier
       # @raise [Ezid::Error]
-      def create(attrs = {})
-        identifier = new(attrs)
-        identifier.save
+      def create(*args)
+        raise ArgumentError, "`mint` receives 0-2 arguments." if args.size > 2
+        if args.first.is_a?(Hash)
+          warn "[DEPRECATION] Sending a hash as the first argument to `create` is deprecated and will raise an exception in 2.0. Use `create(id, metadata)` or `mint(metadata)` instead. (called from #{caller.first})"
+          metadata = args.first
+          id = metadata.delete(:id)
+        else
+          id, metadata = args
+        end
+        if id.nil?
+          warn "[DEPRECATION] Calling `create` without an id will raise an exception in 2.0. Use `mint` instead. (called from #{caller.first})"
+          shoulder = metadata.delete(:shoulder)
+          mint(shoulder, metadata)
+        else
+          new(id, metadata) { |i| i.save }
+        end
+      end
+
+      # Mints a new identifier
+      # @overload mint(shoulder, metadata=nil)
+      #   @param shoulder [String] the EZID shoulder on which to mint
+      #   @param metadata [Hash] the metadata to set on the identifier
+      # @overload mint(metadata=nil)
+      #   @param metadata [Hash] the metadata to set on the identifier
+      # @return [Ezid::Identifier] the new identifier
+      # @raise [Ezid::Error]
+      def mint(*args)
+        raise ArgumentError, "`mint` receives 0-2 arguments." if args.size > 2
+        metadata = args.last.is_a?(Hash) ? args.pop : nil
+        new(metadata) do |i|
+          i.shoulder = args.first
+          i.save
+        end
+      end
+
+      # Modifies the metadata of an existing identifier.
+      # @param id [String] the EZID identifier
+      # @param metadata [Hash] the metadata to update on the identifier
+      # @return [Ezid::Identifier] the identifier
+      # @raise [Ezid::IdentifierNotFoundError]
+      def modify(id, metadata)
+        i = allocate
+        i.id = id
+        i.update_metadata(metadata)
+        i.modify!
       end
 
       # Retrieves an identifier
+      # @param id [String] the EZID identifier to find
       # @return [Ezid::Identifier] the identifier
-      # @raise [Ezid::Error] if the identifier does not exist in EZID
+      # @raise [Ezid::IdentifierNotFoundError] if the identifier does not exist in EZID
       def find(id)
-        identifier = new(id: id)
-        identifier.load_metadata
+        i = allocate
+        i.id = id
+        i.load_metadata
       end
     end
 
     self.defaults = {}
 
-    def initialize(args={})
-      @client = args.delete(:client) || Client.new
-      @id = args.delete(:id)
-      @shoulder = args.delete(:shoulder)
-      @state = :new
-      self.metadata = Metadata.new args.delete(:metadata)
-      update_metadata self.class.defaults.merge(args) # deprecate?
+    def initialize(*args)
+      raise ArgumentError, "`new` receives 0-2 arguments." if args.size > 2
+      data = args.last.is_a?(Hash) ? args.pop : nil
+      @id = args.first
+      apply_default_metadata
+      if data
+        if shoulder = data.delete(:shoulder)
+          warn "[DEPRECATION] The `:shoulder` hash option is deprecated and will raise an exception in 2.0. Use `Ezid::Identifier.mint(shoulder, metadata)` to mint an identifier. (called by #{caller.first})"
+          @shoulder = shoulder
+        end
+        if anvl = data.delete(:metadata)
+          update_metadata(anvl)
+        end
+        update_metadata(data)
+      end
+      yield self if block_given?
     end
 
     def inspect
-      attrs = if deleted?
-                "id=\"#{id}\" DELETED"
-              else
-                INSPECT_ATTRS.map { |attr| "#{attr}=#{send(attr).inspect}" }.join(", ")
-              end
-      "#<#{self.class.name} #{attrs}>"
+      id_val = if id.nil?
+                 "NEW"
+               elsif deleted?
+                 "#{id} [DELETED]"
+               else
+                 id
+               end
+      "#<#{self.class.name} id=#{id_val}>"
     end
 
     def to_s
@@ -60,11 +118,16 @@ module Ezid
     end
 
     # Returns the identifier metadata
-    # @param load [Boolean] - flag to load the metadata from EZID if stale (default: `true`)
     # @return [Ezid::Metadata] the metadata
-    def metadata(load = true)
-      load_metadata if load && stale?
-      @metadata
+    def metadata(_=nil)
+      if !_.nil?
+        warn "[DEPRECATION] The parameter of `metadata` is deprecated and will be removed in 2.0. (called from #{caller.first})"
+      end
+      @metadata ||= Metadata.new
+    end
+
+    def remote_metadata
+      @remote_metadata ||= Metadata.new
     end
 
     # Persist the identifer and/or metadata to EZID.
@@ -77,27 +140,41 @@ module Ezid
     def save
       raise Error, "Cannot save a deleted identifier." if deleted?
       persist
-      reset
+      reset_metadata
+      self
+    end
+
+    # Force a modification of the EZID identifier -- i.e.,
+    #   assumes previously persisted without confirmation.
+    # @return [Ezid::Identifier] the identifier
+    # @raise [Ezid::Error] if `id` is nil
+    # @raise [Ezid::IdentifierNotFoundError] if EZID identifier does not exist.
+    def modify!
+      raise Error, "Cannot modify an identifier without and id." if id.nil?
+      modify
+      persists!
+      reset_metadata
+      self
     end
 
     # Updates the metadata
     # @param attrs [Hash] the metadata
     # @return [Ezid::Identifier] the identifier
     def update_metadata(attrs={})
-      attrs.each { |k, v| send("#{k}=", v) }
+      metadata.update(attrs)
       self
     end
 
     # Is the identifier persisted?
     # @return [Boolean]
     def persisted?
-      state == :persisted
+      !!persisted
     end
 
     # Has the identifier been deleted?
     # @return [Boolean]
     def deleted?
-      state == :deleted
+      !!deleted
     end
 
     # Updates the metadata and saves the identifier
@@ -111,24 +188,26 @@ module Ezid
 
     # @deprecated Use {#load_metadata} instead.
     def reload
-      warn "[DEPRECATION] `reload` is deprecated and will be removed in version 2.0. Use `load_metadata` instead."
+      warn "[DEPRECATION] `reload` is deprecated and will be removed in version 2.0. Use `load_metadata` instead. (called from #{caller.first})"
       load_metadata
     end
 
-    # Loads the metadata from EZID (local changes will be lost!)
+    # Loads the metadata from EZID
     # @return [Ezid::Identifier] the identifier
     # @raise [Ezid::Error]
     def load_metadata
       response = client.get_identifier_metadata(id)
-      self.metadata = Metadata.new(response.metadata)
-      self.state = :persisted
+      # self.remote_metadata = Metadata.new(response.metadata)
+      remote_metadata.replace(response.metadata)
+      persists!
       self
     end
 
     # Empties the (local) metadata (changes will be lost!)
     # @return [Ezid::Identifier] the identifier
     def reset
-      clear_metadata
+      warn "[DEPRECATION] `reset` is deprecated and will be removed in 2.0. Use `reset_metadata` instead. (called from #{caller.first})"
+      reset_metadata
       self
     end
 
@@ -139,8 +218,10 @@ module Ezid
     def delete
       raise Error, "Only persisted, reserved identifiers may be deleted: #{inspect}." unless deletable?
       client.delete_identifier(id)
-      self.state = :deleted
-      reset
+      reset_metadata
+      self.deleted = true
+      self.persisted = false
+      self
     end
 
     # Is the identifier reserved?
@@ -190,22 +271,32 @@ module Ezid
       self.status = Status::PUBLIC
     end
 
+    def client
+      @client ||= Client.new
+    end
+
+    def reset_metadata
+      metadata.clear unless metadata.empty?
+      remote_metadata.clear unless remote_metadata.empty?
+    end
+
     protected
 
-    def method_missing(method, *args)
-      metadata.send(method, *args)
+    def method_missing(*args)
+      local_or_remote_metadata(*args)
     rescue NoMethodError
       super
     end
 
     private
 
-    def stale?
-      persisted? && metadata(false).empty?
-    end
-
-    def clear_metadata
-      metadata(false).clear
+    def local_or_remote_metadata(*args)
+      value = metadata.send(*args)
+      if value.nil? && persisted?
+        load_metadata if remote_metadata.empty?
+        value = remote_metadata.send(*args)
+      end
+      value
     end
 
     def modify
@@ -227,7 +318,15 @@ module Ezid
 
     def persist
       persisted? ? modify : create_or_mint
-      self.state = :persisted
+      persists!
+    end
+
+    def persists!
+      self.persisted = true
+    end
+
+    def apply_default_metadata
+      update_metadata(self.class.defaults)
     end
 
   end
