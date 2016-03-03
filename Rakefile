@@ -6,7 +6,17 @@ RSpec::Core::RakeTask.new(:spec)
 
 desc "Run the ci build (no integration tests)"
 task :ci do
-  system "rspec ./spec/unit/"
+  system "rspec . -t ~deprecated -t ~integration"
+end
+
+desc "Run tests of deprecated functionality"
+task :deprecated do
+  system "rspec . -t deprecated"
+end
+
+desc "Run the integration tests"
+task :integration do
+  system "rspec . -t integration"
 end
 
 task default: :spec

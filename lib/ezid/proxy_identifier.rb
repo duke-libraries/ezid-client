@@ -1,7 +1,7 @@
 module Ezid
   class ProxyIdentifier
 
-    warn "[DEPRECATION] `Ezid::ProxyIdentifier` is deprecated and will be removed in v2.0. Use `Ezid::Identifier` instead."
+    warn "[DEPRECATION] `Ezid::ProxyIdentifier` is deprecated and will be removed in v2.0. Use `Ezid::Identifier` instead. (called from #{caller.first})"
 
     attr_reader :id
     attr_accessor :__real

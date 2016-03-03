@@ -14,16 +14,14 @@ module Ezid
             described_class.create("id")
           end
         end
-        describe "with a hash metadata arg" do
+        describe "with a hash metadata arg", deprecated: true do
           it "mints a new Identifier" do
-            skip "DEPRECATED"
             expect(described_class).to receive(:mint).with(nil, profile: "dc", target: "http://example.com")
             described_class.create(profile: "dc", target: "http://example.com")
           end
         end
-        describe "with no args" do
+        describe "with no args", deprecated: true do
           it "mints a new Identifier" do
-            skip "DEPRECATED"
             expect(described_class).to receive(:mint).with(nil, nil)
             described_class.create
           end
@@ -113,11 +111,29 @@ module Ezid
             its(:metadata) { is_expected.to eq("_profile"=>"dc", "_target"=>"http://example.com", "_status"=>"reserved", "_export"=>"no") }
           end
         end
+        describe "deprecated hash options", deprecated: true do
+          describe "id" do
+            subject { described_class.new(id: "id") }
+            its(:id) { is_expected.to eq("id") }
+            specify {
+              expect { described_class.new("id", id: "id") }.to raise_error(ArgumentError)
+            }
+          end
+          describe "shoulder" do
+            subject { described_class.new(shoulder: "shoulder") }
+            its(:shoulder) { is_expected.to eq("shoulder") }
+          end
+          describe "client" do
+            let(:client) { double }
+            subject { described_class.new(client: client) }
+            its(:client) { is_expected.to_not eq(client) }
+          end
+        end
       end
 
       describe "#update" do
         let(:metadata) { {"status" => "unavailable"} }
-        subject { described_class.new(id: "id") }
+        subject { described_class.new("id") }
         it "updates the metadata and saves" do
           expect(subject).to receive(:update_metadata).with(metadata)
           expect(subject).to receive(:save) { double }
@@ -223,7 +239,7 @@ module Ezid
           end
         end
         context "when identifier is not reserved" do
-          subject { described_class.new(id: "id", status: Status::PUBLIC) }
+          subject { described_class.new("id", status: Status::PUBLIC) }
           it "raises an exception" do
             expect { subject.delete }.to raise_error(Error)
           end
@@ -302,7 +318,7 @@ module Ezid
       end
 
       describe "status-changing methods" do
-        subject { described_class.new(id: "id", status: status) }
+        subject { described_class.new("id", status: status) }
         describe "#unavailable!" do
           context "when the status is \"unavailable\"" do
             let(:status) { "#{Status::UNAVAILABLE} | whatever" }
@@ -359,7 +375,7 @@ module Ezid
           end
         end
         describe "#public!" do
-          subject { described_class.new(id: "id", status: Status::UNAVAILABLE) }
+          subject { described_class.new("id", status: Status::UNAVAILABLE) }
           it "changes the status" do
             expect { subject.public! }.to change(subject, :status).from(Status::UNAVAILABLE).to(Status::PUBLIC)
           end

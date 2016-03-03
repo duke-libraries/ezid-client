@@ -86,18 +86,29 @@ module Ezid
 
     def initialize(*args)
       raise ArgumentError, "`new` receives 0-2 arguments." if args.size > 2
-      data = args.last.is_a?(Hash) ? args.pop : nil
+      options = args.last.is_a?(Hash) ? args.pop : nil
       @id = args.first
       apply_default_metadata
-      if data
-        if shoulder = data.delete(:shoulder)
+      if options
+        if id = options.delete(:id)
+          warn "[DEPRECATION] The `:id` hash option is deprecated and will raise an exception in 2.0. The id should be passed as the first argument to `new` or set explicitly using the attribute writer. (called by #{caller.first})"
+          if @id
+            raise ArgumentError,
+                  "`id' specified in both positional argument and (deprecated) hash option."
+          end
+          @id = id
+        end
+        if shoulder = options.delete(:shoulder)
           warn "[DEPRECATION] The `:shoulder` hash option is deprecated and will raise an exception in 2.0. Use `Ezid::Identifier.mint(shoulder, metadata)` to mint an identifier. (called by #{caller.first})"
           @shoulder = shoulder
         end
-        if anvl = data.delete(:metadata)
+        if client = options.delete(:client)
+          warn "[DEPRECATION] The `:client` hash option is deprecated and ignored. It will raise an exception in 2.0. See the README for details on configuring `Ezid::Client`."
+        end
+        if anvl = options.delete(:metadata)
           update_metadata(anvl)
         end
-        update_metadata(data)
+        update_metadata(options)
       end
       yield self if block_given?
     end
