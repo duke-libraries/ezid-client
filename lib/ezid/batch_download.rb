@@ -1,6 +1,7 @@
 require "hashie"
 require "net/http"
 require "uri"
+require "date"
 
 module Ezid
   class BatchDownloadError < Error; end
