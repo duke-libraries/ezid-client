@@ -1,11 +1,41 @@
 module Ezid
   RSpec.describe Metadata do
+    describe "initializer" do
+      it "raises an exception when called with a default value" do
+        expect { described_class.new(nil, 1) }.to raise_error(::NotImplementedError)
+      end
+    end
 
     describe "metadata accessors and aliases" do
       shared_examples "a metadata writer" do |writer|
+        let(:method) { "#{writer}=" }
         it "writes the \"#{writer}\" element" do
-          subject.send("#{writer}=", "value")
+          subject.send(method, "value")
           expect(subject[writer.to_s]).to eq("value")
+        end
+        describe "when the value is a Metadata instance" do
+          it "raises an exception" do
+            expect { subject.send(method, Metadata.new({foo: "value1", bar: "value2"})) }
+              .to raise_error(Error)
+          end
+        end
+        describe "when the value is a Hash" do
+          it "raises an exception" do
+            expect { subject.send(method, {foo: "value1", bar: "value2"}) }
+              .to raise_error(Error)
+          end
+        end
+        describe "when the value is an Array" do
+          it "raises an exception" do
+            expect { subject.send(method, ["value1", "value2"]) }
+              .to raise_error(Error)
+          end
+        end
+        describe "when the value is another type" do
+          it "coerces to a string" do
+            subject.send(method, 1)
+            expect(subject[writer.to_s]).to eq "1"
+          end
         end
       end
 
@@ -231,6 +261,5 @@ EOS
         end
       end
     end
-
   end
 end

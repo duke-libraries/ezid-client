@@ -54,14 +54,21 @@ module Ezid
       CREATED, DATACENTER, OWNER, OWNERGROUP, SHADOWEDBY, SHADOWS, UPDATED
     ].freeze
 
-    def initialize(data=nil)
+    # @param data [String, Hash, Ezid::Metadata] the initial data
+    # @param default [Object] DO NOT USE!
+    #   This param is included for compatibility with Hashie::Mash
+    #   and will raise a NotImplementedError if passed a non-nil value.
+    def initialize(data=nil, default=nil)
+      unless default.nil?
+        raise ::NotImplementedError, "ezid-client does not support default metadata values."
+      end
       super()
       update(data) if data
     end
 
     def elements
-      warn "[DEPRECATION] `elements` is deprecated and will be removed in ezid-client 2.0." \
-           " Use the Ezid::Metadata instance itself instead."
+      warn "[DEPRECATION] `Ezid::Metadata#elements` is deprecated and will be removed in ezid-client 2.0." \
+           " Use the `Ezid::Metadata` instance itself instead. (called from #{caller.first})"
       self
     end
 
@@ -110,6 +117,15 @@ module Ezid
       else
         converted
       end
+    end
+
+    # Overrides Hashie::Mash
+    def convert_value(value, duping=false)
+      if [self.class, Hash, Array].include?(value.class)
+        raise Error, "ezid-client does not support instances of #{value.class} as metadata values." \
+                     " Convert an enumerable such as an array to an appropriate string representation first."
+      end
+      value.to_s
     end
 
     private
