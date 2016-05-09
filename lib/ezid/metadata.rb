@@ -54,6 +54,13 @@ module Ezid
       CREATED, DATACENTER, OWNER, OWNERGROUP, SHADOWEDBY, SHADOWS, UPDATED
     ].freeze
 
+    # Metadata profiles
+    ERC      = "erc".freeze
+    DC       = "dc".freeze
+    DATACITE = "datacite".freeze
+    CROSSREF = "crossref".freeze
+    PROFILES = [ ERC, DC, DATACITE, CROSSREF ].freeze
+
     # @param data [String, Hash, Ezid::Metadata] the initial data
     # @param default [Object] DO NOT USE!
     #   This param is included for compatibility with Hashie::Mash

@@ -1,3 +1,5 @@
+require "active_model"
+require "hydra/validations"
 require "hashie"
 require "net/http"
 require "uri"
@@ -8,6 +10,8 @@ module Ezid
 
   class BatchDownload < Hashie::Dash
     include Hashie::Extensions::Coercion
+    include ActiveModel::Validations
+    include Hydra::Validations
 
     ANVL    = "anvl".freeze
     CSV     = "csv".freeze
@@ -61,18 +65,59 @@ module Ezid
     coerce_value FalseClass, ->(v) { NO }
     coerce_value TrueClass,  ->(v) { YES }
     coerce_value DateTime,   ->(v) { v.to_time.utc.iso8601 }
-    coerce_value Time, Integer
+    coerce_value Date,       ->(v) { v.to_time.utc.iso8601 }
+    coerce_value Time,       ->(v) { v.utc.iso8601 }
+    coerce_value Symbol, String
+
+    validates_inclusion_of :format, in: FORMATS
+    validates_inclusion_of :permanence, in: PERMANENCE, allow_nil: true
+    validates_inclusion_of :crossref, in: BOOLEANS, allow_nil: true
+    validates_inclusion_of :exported, in: BOOLEANS, allow_nil: true
+    validates_inclusion_of :convertTimestamps, in: BOOLEANS, allow_nil: true
+    validates_inclusion_of :type, in: TYPES, allow_nil: true
+    validates_inclusion_of :status,
+                           in: [ Status::PUBLIC, Status::RESERVED, Status::UNAVAILABLE ],
+                           allow_nil: true
+    validates_inclusion_of :profile, in: Metadata::PROFILES, allow_nil: true
+    validates_presence_of :column, if: :csv?
+
+    def self.alias_property(ali, prop)
+      alias_method ali, prop
+      define_method "#{ali}=" do |value|
+        send("#{prop}=", value)
+      end
+    end
+
+    FORMATS.each do |fmt|
+      define_method "#{fmt}?" do
+        format == fmt
+      end
+    end
+
+    alias_property :convert_timestamps, :convertTimestamps
+    alias_property :created_after, :createdAfter
+    alias_property :created_before, :createdBefore
+    alias_property :updated_after, :updatedAfter
+    alias_property :updated_before, :updatedBefore
 
     def initialize(format, args={})
       super(args.merge(format: format))
     end
 
+    def convert_timestamps!
+      self.convertTimestamps = true
+    end
+
     def params
-      to_h
+      to_h.reject { |k, v| v.nil? }
     end
 
     def get_response
-      @response ||= client.batch_download(params)
+      if @response.nil?
+        raise Error, "Invalid batch download parameters:\n#{errors.to_a.join('\n')}" if invalid?
+        @response = client.batch_download(params)
+      end
+      @response
     end
 
     def reload
@@ -94,8 +139,7 @@ module Ezid
       rescue Net::HTTPServerException => e
         if download.is_a?(Net::HTTPNotFound)
           if tries < MAX_DOWNLOAD_TRIES
-            print "Download file not yet available (attempt #{tries} of #{MAX_DOWNLOAD_TRIES})."
-            puts " Trying again in #{DOWNLOAD_RETRY_INTERVAL} second(s) ..."
+            print "."
             sleep DOWNLOAD_RETRY_INTERVAL
             retry
           else
@@ -109,7 +153,7 @@ module Ezid
         File.open(fullpath, "wb") do |f|
           f.write(download.body)
         end
-        puts "File successfully download to #{fullpath}."
+        puts "\nFile successfully downloaded to #{fullpath}."
       end
     end
 
