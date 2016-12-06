@@ -109,7 +109,7 @@ module Ezid
         File.open(fullpath, "wb") do |f|
           f.write(download.body)
         end
-        puts "File successfully download to #{fullpath}."
+        puts "File successfully downloaded to #{fullpath}."
       end
     end
 
