@@ -12,11 +12,11 @@ module Ezid
     def each(&block)
       case format
       when :anvl
-        each_anvl &block
+        each_anvl(&block)
       when :xml
-        each_xml &block
+        each_xml(&block)
       when :csv
-        each_csv &block
+        each_csv(&block)
       end
     end
 
