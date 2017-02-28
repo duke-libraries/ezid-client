@@ -1,0 +1,39 @@
+:: ark:/99999/fk4086hs23
+_updated: 1488227717
+_target: http://example.com
+_profile: erc
+_ownergroup: apitest
+_owner: apitest
+_export: yes
+_created: 1488227717
+_status: public
+
+:: ark:/99999/fk4086hs23/123
+_updated: 1488227718
+_target: http://ezid.cdlib.org/id/ark:/99999/fk4086hs23/123
+_profile: erc
+_ownergroup: apitest
+_owner: apitest
+_export: yes
+_created: 1488227718
+_status: public
+
+:: ark:/99999/fk40p1bb85
+_updated: 1488303565
+_target: http://ezid.cdlib.org/id/ark:/99999/fk40p1bb85
+_profile: erc
+_ownergroup: apitest
+_owner: apitest
+_export: yes
+_created: 1488303565
+_status: public
+
+:: ark:/99999/fk40z7fh7x
+_updated: 1488232856
+_target: http://ezid.cdlib.org/id/ark:/99999/fk40z7fh7x
+_profile: erc
+_ownergroup: apitest
+_owner: apitest
+_export: yes
+_created: 1488232856
+_status: public

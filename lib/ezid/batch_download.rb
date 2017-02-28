@@ -40,6 +40,7 @@ module Ezid
 
     # Parameters
     property :format, required: true # {anvl|csv|xml}
+    property :compression            # {gzip|zip}
     property :column                 # repeatable
     property :notify                 # repeatable
     property :convertTimestamps      # {yes|no}
@@ -87,36 +88,45 @@ module Ezid
       path ||= Dir.getwd
       fullpath = File.directory?(path) ? File.join(path, download_filename) : path
       tries = 0
-      begin
-        tries += 1
-        download = Net::HTTP.get_response(download_uri)
-        download.value
-      rescue Net::HTTPServerException => e
-        if download.is_a?(Net::HTTPNotFound)
-          if tries < MAX_DOWNLOAD_TRIES
-            print "Download file not yet available (attempt #{tries} of #{MAX_DOWNLOAD_TRIES})."
-            puts " Trying again in #{DOWNLOAD_RETRY_INTERVAL} second(s) ..."
-            sleep DOWNLOAD_RETRY_INTERVAL
-            retry
-          else
-            raise BatchDownloadError,
-                  "Maximum download attempts (#{MAX_DOWNLOAD_TRIES}) reached unsuccessfully."
+      ready = false
+
+      print "Checking for download "
+      Net::HTTP.start(download_uri.host, download_uri.port) do |http|
+        while tries < MAX_DOWNLOAD_TRIES
+          tries += 1
+          sleep DOWNLOAD_RETRY_INTERVAL
+          print "."
+          response = http.head(download_uri.path)
+          if response.code == '200'
+            ready = true
+            break
           end
-        else
-          raise
         end
-      else
-        File.open(fullpath, "wb") do |f|
-          f.write(download.body)
-        end
-        puts "File successfully downloaded to #{fullpath}."
       end
+      puts
+
+      unless ready
+        raise BatchDownloadError,
+              "Download not ready after checking #{MAX_DOWNLOAD_TRIES} times."
+      end
+
+      File.open(fullpath, "wb") do |f|
+        Net::HTTP.start(download_uri.host, download_uri.port) do |http|
+          http.request_get(download_uri.path) do |response|
+            response.read_body do |chunk|
+              f.write(chunk)
+            end
+          end
+        end
+      end
+
+      fullpath
     end
 
     private
 
     def download_uri
-      URI(download_url)
+      @download_uri ||= URI(download_url)
     end
 
     def download_filename
