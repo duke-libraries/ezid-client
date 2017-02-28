@@ -382,5 +382,11 @@ module Ezid
         end
       end
     end
+
+    describe "#metadata" do
+      it "is frozen" do
+        expect { subject.metadata["foo"] = "bar" }.to raise_error(RuntimeError)
+      end
+    end
   end
 end

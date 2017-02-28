@@ -134,7 +134,11 @@ module Ezid
       if !_.nil?
         warn "[DEPRECATION] The parameter of `metadata` is deprecated and will be removed in 2.0. (called from #{caller.first})"
       end
-      @metadata ||= Metadata.new
+      remote_metadata.merge(local_metadata).freeze
+    end
+
+    def local_metadata
+      @local_metadata ||= Metadata.new
     end
 
     def remote_metadata
@@ -172,7 +176,7 @@ module Ezid
     # @param attrs [Hash] the metadata
     # @return [Ezid::Identifier] the identifier
     def update_metadata(attrs={})
-      metadata.update(attrs)
+      local_metadata.update(attrs)
       self
     end
 
@@ -208,7 +212,6 @@ module Ezid
     # @raise [Ezid::Error]
     def load_metadata
       response = client.get_identifier_metadata(id)
-      # self.remote_metadata = Metadata.new(response.metadata)
       remote_metadata.replace(response.metadata)
       persists!
       self
@@ -287,7 +290,7 @@ module Ezid
     end
 
     def reset_metadata
-      metadata.clear unless metadata.empty?
+      local_metadata.clear unless local_metadata.empty?
       remote_metadata.clear unless remote_metadata.empty?
     end
 
@@ -302,7 +305,7 @@ module Ezid
     private
 
     def local_or_remote_metadata(*args)
-      value = metadata.send(*args)
+      value = local_metadata.send(*args)
       if value.nil? && persisted?
         load_metadata if remote_metadata.empty?
         value = remote_metadata.send(*args)
@@ -311,7 +314,7 @@ module Ezid
     end
 
     def modify
-      client.modify_identifier(id, metadata)
+      client.modify_identifier(id, local_metadata)
     end
 
     def create_or_mint
@@ -319,12 +322,12 @@ module Ezid
     end
 
     def mint
-      response = client.mint_identifier(shoulder, metadata)
+      response = client.mint_identifier(shoulder, local_metadata)
       self.id = response.id
     end
 
     def create
-      client.create_identifier(id, metadata)
+      client.create_identifier(id, local_metadata)
     end
 
     def persist

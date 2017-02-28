@@ -1,7 +1,7 @@
 require 'tempfile'
 
 module Ezid
-  RSpec.describe BatchDownload do
+  RSpec.describe BatchDownload, integration: true do
 
     subject do
       a_week_ago = (Time.now - (7*24*60*60)).to_i
