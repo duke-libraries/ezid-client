@@ -84,6 +84,8 @@ module Ezid
       get_response.download_url
     end
 
+    alias_method :url, :download_url
+
     def download_file(path: nil)
       path ||= Dir.getwd
       fullpath = File.directory?(path) ? File.join(path, download_filename) : path
@@ -122,6 +124,8 @@ module Ezid
 
       fullpath
     end
+
+    alias_method :file, :download_file
 
     private
 

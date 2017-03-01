@@ -65,10 +65,25 @@ module Ezid
       # @return [Ezid::Identifier] the identifier
       # @raise [Ezid::IdentifierNotFoundError]
       def modify(id, metadata)
-        i = allocate
-        i.id = id
-        i.update_metadata(metadata)
-        i.modify!
+        allocate.tap do |i|
+          i.id = id
+          i.update_metadata(metadata)
+          i.modify!
+        end
+      end
+
+      # Loads an identifier with provided remote metadata
+      # The main purpose is to provide an API in a batch processing
+      # context to instantiate Identifiers from a BatchDownload.
+      # @see #load_metadata!
+      # @param id [String] the EZID identifier
+      # @param metadata [String, Hash, Ezid::Metadata] the provided metadata
+      # @return [Ezid::Identifier] the identifier
+      def load(id, metadata = nil)
+        allocate.tap do |i|
+          i.id = id
+          i.load_metadata!(metadata)
+        end
       end
 
       # Retrieves an identifier
@@ -76,9 +91,10 @@ module Ezid
       # @return [Ezid::Identifier] the identifier
       # @raise [Ezid::IdentifierNotFoundError] if the identifier does not exist in EZID
       def find(id)
-        i = allocate
-        i.id = id
-        i.load_metadata
+        allocate.tap do |i|
+          i.id = id
+          i.load_metadata
+        end
       end
     end
 
@@ -132,7 +148,8 @@ module Ezid
     # @return [Ezid::Metadata] the metadata
     def metadata(_=nil)
       if !_.nil?
-        warn "[DEPRECATION] The parameter of `metadata` is deprecated and will be removed in 2.0. (called from #{caller.first})"
+        warn "[DEPRECATION] The parameter of `metadata` is ignored and will be removed in 2.0. " \
+             "(called from #{caller.first})"
       end
       remote_metadata.merge(local_metadata).freeze
     end
@@ -207,12 +224,25 @@ module Ezid
       load_metadata
     end
 
-    # Loads the metadata from EZID
+    # Loads the metadata from EZID and marks the identifier as persisted.
     # @return [Ezid::Identifier] the identifier
-    # @raise [Ezid::Error]
+    # @raise [Ezid::Error] the identifier is not found or other error.
     def load_metadata
       response = client.get_identifier_metadata(id)
-      remote_metadata.replace(response.metadata)
+      load_remote_metadata(response.metadata)
+      persists!
+      self
+    end
+
+    # Loads provided metadata and marks the identifier as persisted.
+    # The main purpose is to provide an API in a batch processing
+    # context to instantiate Identifiers from a BatchDownload.
+    # @see Ezid::BatchEnumerator
+    # @see .load
+    # @param metadata [String, Hash, Ezid::Metadata] the provided metadata
+    # @return [Ezid::Identifier] the identifier
+    def load_metadata!(metadata)
+      load_remote_metadata(metadata)
       persists!
       self
     end
@@ -341,6 +371,10 @@ module Ezid
 
     def apply_default_metadata
       update_metadata(self.class.defaults)
+    end
+
+    def load_remote_metadata(metadata)
+      remote_metadata.replace(metadata)
     end
 
   end
