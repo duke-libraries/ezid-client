@@ -33,9 +33,11 @@ Or install it yourself as:
 >> identifier = Ezid::Identifier.mint("ark:/99999/fk4")
 I, [2016-03-01T22:20:08.505323 #35148]  INFO -- : EZID MintIdentifier -- success: ark:/99999/fk4tq65d6k
 => #<Ezid::Identifier id=ark:/99999/fk4tq65d6k>
+
 >> identifier.status
 I, [2016-03-01T22:20:22.323650 #35148]  INFO -- : EZID GetIdentifierMetadata -- success: ark:/99999/fk4tq65d6k
 => "public"
+
 >> identifier.target
 => "http://ezid.cdlib.org/id/ark:/99999/fk4tq65d6k"
 ```
@@ -87,11 +89,14 @@ I, [2014-12-04T15:07:00.648676 #86655]  INFO -- : EZID GetIdentifierMetadata -- 
 ```
 >> identifier.target
 => "http://ezid.cdlib.org/id/ark:/99999/fk43f4wd4v"
+
 >> identifier.target = "http://example.com"
 => "http://example.com"
+
 >> identifier.save
 I, [2014-12-09T11:24:26.321801 #32279]  INFO -- : EZID ModifyIdentifier -- success: ark:/99999/fk43f4wd4v
 => #<Ezid::Identifier id="ark:/99999/fk43f4wd4v">
+
 >> identifier.target
 I, [2014-12-09T11:24:27.039288 #32279]  INFO -- : EZID GetIdentifierMetadata -- success: ark:/99999/fk43f4wd4v
 => "http://example.com"
@@ -107,6 +112,7 @@ I, [2014-12-09T11:24:27.039288 #32279]  INFO -- : EZID GetIdentifierMetadata -- 
 >> identifier = Ezid::Identifier.mint("ark:/99999/fk4", status: "reserved")
 I, [2016-03-01T22:26:08.645858 #36701]  INFO -- : EZID MintIdentifier -- success: ark:/99999/fk4pz5fm1b
 => #<Ezid::Identifier id=ark:/99999/fk4pz5fm1b>
+
 >> identifier.delete
 I, [2016-03-01T22:26:14.829731 #36701]  INFO -- : EZID GetIdentifierMetadata -- success: ark:/99999/fk4pz5fm1b
 I, [2016-03-01T22:26:15.711390 #36701]  INFO -- : EZID DeleteIdentifier -- success: ark:/99999/fk4pz5fm1b
@@ -120,21 +126,56 @@ See http://ezid.cdlib.org/doc/apidoc.html#parameters. Repeated values should be 
 *Added in v1.3.0:* `Ezid::BatchDownload` class.
 
 ```
->> batch = Ezid::BatchDownload.new(:csv)
+>> batch_download = Ezid::BatchDownload.new(:csv)
  => #<Ezid::BatchDownload format=:csv>
->> batch.column = ["_id", "_target"]
+ 
+>> batch_download.column = ["_id", "_target"]
  => ["_id", "_target"]
->> batch.createdAfter = Date.today.to_time
+ 
+>> batch_download.createdAfter = Date.today.to_time
  => 2016-02-24 00:00:00 -0500
->> batch
+ 
+>> batch_download
  => #<Ezid::BatchDownload column=["_id", "_target"] createdAfter=1456290000 format=:csv>
->> batch.download_url
+ 
+>> batch_download.url
 I, [2016-02-24T18:03:40.828005 #1084]  INFO -- : EZID BatchDownload -- success: http://ezid.cdlib.org/download/4a63401e17.csv.gz
  => "http://ezid.cdlib.org/download/4a63401e17.csv.gz"
->> batch.download_file
-File successfully download to /current/working/directory/4a63401e17.csv.gz.
- => nil
+ 
+>> batch_download.file
+ => /current/working/directory/4a63401e17.csv.gz
  ```
+
+## Batch
+
+*Added in v1.6.0.* `Ezid::Batch` class.
+
+**Version 1.7.0 upgrade note:** This class was originally named `Ezid::BatchEnumerator`, but it is not a Ruby enumerator. `Ezid::Batch` is the new name with the same API.
+
+```
+>> require 'ezid/batch'
+ => true
+ 
+>> batch = Ezid::Batch.new(:anvl, "spec/fixtures/anvl_batch.txt")
+ => #<Ezid::Batch:0x007f87a8900308 @format=:anvl, @batch_file="spec/fixtures/anvl_batch.txt">
+ 
+>> id = batch.first
+ => #<Ezid::Identifier id=ark:/99999/fk4086hs23>
+ 
+>> id.target
+ => "http://example.com"
+
+>> puts id.metadata
+_updated: 1488227717
+_target: http://example.com
+_profile: erc
+_ownergroup: apitest
+_owner: apitest
+_export: yes
+_created: 1488227717
+_status: public
+ => nil
+```
 
 ## Metadata handling
 
@@ -145,6 +186,7 @@ Accessors are provided to ease the use of EZID [reserved metadata elements](http
 ```
 >> identifier.status                 # reads "_status" element
 => "public"
+
 >> identifier.status = "unavailable" # writes "_status" element
 => "unavailable"
 ```
@@ -159,6 +201,7 @@ Notes:
 ```
 >> identifier.dc_type           # reads "dc.type" element
 => "Collection"
+
 >> identifier.dc_type = "Image" # writes "dc.type" element
 => "Image"
 ```

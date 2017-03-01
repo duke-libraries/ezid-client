@@ -1,7 +1,7 @@
-require 'ezid/batch_enumerator'
+require 'ezid/batch'
 
 module Ezid
-  RSpec.describe BatchEnumerator do
+  RSpec.describe Batch do
 
     let(:batch_file) { File.expand_path("../../fixtures/anvl_batch.txt", __FILE__) }
 

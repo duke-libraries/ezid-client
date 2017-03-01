@@ -1,6 +1,39 @@
 module Ezid
   RSpec.describe Identifier do
+
     describe "class methods" do
+
+      describe ".load" do
+        subject { described_class.load("ark:/99999/fk4086hs23", metadata) }
+        describe "with ANVL metadata" do
+          let(:metadata) do
+            <<-EOS
+_updated: 1488227717
+_target: http://example.com
+_profile: erc
+_ownergroup: apitest
+_owner: apitest
+_export: yes
+_created: 1488227717
+_status: public
+            EOS
+          end
+          its(:remote_metadata) {
+            is_expected.to eq({"_updated"=>"1488227717",
+                               "_target"=>"http://example.com",
+                               "_profile"=>"erc",
+                               "_ownergroup"=>"apitest",
+                               "_owner"=>"apitest",
+                               "_export"=>"yes",
+                               "_created"=>"1488227717",
+                               "_status"=>"public"})
+          }
+        end
+        describe "with nil" do
+          let(:metadata) { nil }
+          its(:remote_metadata) { is_expected.to be_empty }
+        end
+      end
       describe ".create" do
         describe "with id and metadata args" do
           it "instantiates a new Identifier and saves it" do
@@ -63,6 +96,7 @@ module Ezid
     end
 
     describe "instance methods" do
+
       describe "#initialize" do
         before {
           allow(described_class).to receive(:defaults) { defaults }
@@ -129,7 +163,7 @@ module Ezid
             its(:client) { is_expected.to_not eq(client) }
           end
         end
-      end
+      end # initialize
 
       describe "#update" do
         let(:metadata) { {"status" => "unavailable"} }
@@ -172,12 +206,23 @@ module Ezid
       end
 
       describe "#load_metadata" do
+        subject { described_class.new("id") }
         let(:metadata) { "_profile: erc" }
-        before { allow(subject).to receive(:id) { "id" } }
         it "replaces the remote metadata with metadata from EZID" do
           expect(subject.client).to receive(:get_identifier_metadata).with("id") { double(id: "id", metadata: metadata) }
-          expect(subject.remote_metadata).to receive(:replace).with(metadata)
           subject.load_metadata
+          expect(subject.remote_metadata).to eq({"_profile"=>"erc"})
+          expect(subject).to be_persisted
+        end
+      end
+
+      describe "#load_metadata!" do
+        subject { described_class.new("id") }
+        let(:metadata) { "_profile: erc" }
+        it "replaces the remote metadata with the provided metadata" do
+          subject.load_metadata!(metadata)
+          expect(subject.remote_metadata).to eq({"_profile"=>"erc"})
+          expect(subject).to be_persisted
         end
       end
 
@@ -323,23 +368,11 @@ module Ezid
           context "when the status is \"unavailable\"" do
             let(:status) { "#{Status::UNAVAILABLE} | whatever" }
             context "and no reason is given" do
-              it "logs a warning" do
-                pending "https://github.com/duke-libraries/ezid-client/issues/46"
-                allow_message_expectations_on_nil
-                expect(subject.logger).to receive(:warn)
-                subject.unavailable!
-              end
               it "does not change the status" do
                 expect { subject.unavailable! }.not_to change(subject, :status)
               end
             end
             context "and a reason is given" do
-              it "logs a warning" do
-                pending "https://github.com/duke-libraries/ezid-client/issues/46"
-                allow_message_expectations_on_nil
-                expect(subject.logger).to receive(:warn)
-                subject.unavailable!("because")
-              end
               it "should change the status" do
                 expect { subject.unavailable!("because") }.to change(subject, :status).from(status).to("#{Status::UNAVAILABLE} | because")
               end
@@ -380,6 +413,12 @@ module Ezid
             expect { subject.public! }.to change(subject, :status).from(Status::UNAVAILABLE).to(Status::PUBLIC)
           end
         end
+      end
+    end
+
+    describe "#metadata" do
+      it "is frozen" do
+        expect { subject.metadata["foo"] = "bar" }.to raise_error(RuntimeError)
       end
     end
   end
