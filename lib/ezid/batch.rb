@@ -1,5 +1,5 @@
 module Ezid
-  class BatchEnumerator
+  class Batch
     include Enumerable
 
     attr_reader :format, :batch_file
@@ -25,7 +25,7 @@ module Ezid
         while record = f.gets("")
           head, metadata = record.split(/\n/, 2)
           id = head.sub(/\A::/, "").strip
-          yield Ezid::Identifier.new(id, metadata: metadata)
+          yield Identifier.load(id, metadata)
         end
       end
     end

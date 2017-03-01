@@ -8,11 +8,11 @@ module Ezid
       described_class.new(:anvl, compression: "zip", permanence: "test", status: "public", createdAfter: a_week_ago)
     end
 
-    its(:download_url) { is_expected.to match(/\Ahttp:\/\/ezid\.cdlib\.org\/download\/\w+\.zip\z/) }
-
     specify {
+      expect(subject.download_url).to match(/\Ahttp:\/\/ezid\.cdlib\.org\/download\/\w+\.zip\z/)
+      expect(subject.url).to match(/\Ahttp:\/\/ezid\.cdlib\.org\/download\/\w+\.zip\z/)
       Dir.mktmpdir do |tmpdir|
-        expect(subject.download_file(path: tmpdir))
+        expect(subject.file(path: tmpdir))
           .to match(/\A#{tmpdir}\/\w+\.zip\z/)
       end
     }
