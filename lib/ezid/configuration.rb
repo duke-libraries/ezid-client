@@ -44,7 +44,7 @@ module Ezid
       @password         = ENV["EZID_PASSWORD"]
       @host             = ENV["EZID_HOST"] || HOST
       @port             = ENV["EZID_PORT"] || PORT
-      @use_ssl          = true if ENV["EZID_USE_SSL"] == true.to_s
+      @use_ssl          = true unless ENV["EZID_USE_SSL"] == false.to_s
       @timeout          = ENV["EZID_TIMEOUT"] || TIMEOUT
       @default_shoulder = ENV["EZID_DEFAULT_SHOULDER"]
     end
