@@ -20,9 +20,6 @@ module Ezid
     # EZID TCP/IP port
     attr_accessor :port
 
-    # Use HTTPS?
-    attr_accessor :use_ssl
-
     # HTTP read timeout (seconds)
     attr_accessor :timeout
 
@@ -44,7 +41,6 @@ module Ezid
       @password         = ENV["EZID_PASSWORD"]
       @host             = ENV["EZID_HOST"] || HOST
       @port             = ENV["EZID_PORT"] || PORT
-      @use_ssl          = true unless ENV["EZID_USE_SSL"] == false.to_s
       @timeout          = ENV["EZID_TIMEOUT"] || TIMEOUT
       @default_shoulder = ENV["EZID_DEFAULT_SHOULDER"]
     end
@@ -65,6 +61,17 @@ module Ezid
 
     def metadata
       Metadata
+    end
+
+    def use_ssl
+      warn "[DEPRECATION] `use_ssl` is deprecated and will be removed in ezid-client v2.0." \
+           " EZID requires SSL as of April 30, 2017."
+      true
+    end
+
+    def use_ssl=(*)
+      warn "[DEPRECATION] `use_ssl=` is deprecated and will be removed in ezid-client v2.0." \
+           " EZID requires SSL as of April 30, 2017."
     end
 
   end
