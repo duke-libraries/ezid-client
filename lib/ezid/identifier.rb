@@ -320,8 +320,8 @@ module Ezid
     end
 
     def reset_metadata
-      local_metadata.clear unless local_metadata.empty?
-      remote_metadata.clear unless remote_metadata.empty?
+      local_metadata.clear
+      remote_metadata.clear
     end
 
     protected
