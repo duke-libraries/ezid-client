@@ -296,11 +296,10 @@ require "ezid/test_helper"
 
 The module provides constants:
 
-- `TEST_ARK_SHOULDER` => "ark:/99999/fk4"
-- `TEST_DOI_SHOULDER` => "doi:10.5072/FK2"
-- `TEST_USER` => "apitest"
-- `TEST_HOST` => "ezid.cdlib.org"
-- `TEST_PORT` => 443
+- `EZID_TEST_SHOULDER` => "doi:10.5072/FK2"
+- `EZID_TEST_USER` => "apitest"
+- `EZID_TEST_HOST` => "ezid.cdlib.org"
+- `EZID_TEST_PORT` => 443
 
 The test user password is not provided - contact EZID and configure as above - or use your own EZID credentials, since all accounts can mint/create on the test shoulders.
 
