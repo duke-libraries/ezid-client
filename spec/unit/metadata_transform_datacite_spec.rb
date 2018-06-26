@@ -67,7 +67,7 @@ module Ezid
       context "when there are no datacite fields" do
         let(:expected_hash) { {
           "datacite.identifier" => "",
-          "datacite.identifiertype" => "",
+          "datacite.identifiertype" => "DOI",
           "datacite.creator" => "",
           "datacite.description" => "",
           "datacite.publicationyear" => "",

@@ -12,9 +12,9 @@ module Ezid
         "xmlns" => "http://datacite.org/schema/kernel-4",
         "xsi:schemaLocation" => "http://datacite.org/schema/kernel-4 http://schema.datacite.org/meta/kernel-4/metadata.xsd"
       }
-      xml = Nokogiri::XML::Builder.new(encoding: "UTF-8") { |builder|
+      xml_builder = Nokogiri::XML::Builder.new(encoding: "UTF-8") { |builder|
         builder.resource(resource_opts) {
-          builder.identifier(identifierType: hsh["datacite.identifiertype"]) {
+          builder.identifier(identifierType: hsh["datacite.identifiertype"] || "DOI") {
             builder.text hsh["datacite.identifier"]
           }
           builder.creators {
@@ -36,7 +36,16 @@ module Ezid
             }
           }
         }
-      }.to_xml
+      }
+      # Using this save option to prevent NG from rendering new lines and tabs
+      # between nodes. This to help with a cleaner anvl conversion. Similarly,
+      # the sub should just remove the new line after the xml header that NG
+      # adds, ex:
+      #   <?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<resource ...
+      xml = xml_builder
+        .to_xml(save_with: Nokogiri::XML::Node::SaveOptions::AS_XML)
+        .sub("\n", "")
+
 
       # Transform the hash
       hsh.reject! { |k, v| k =~ /^datacite\./ }
