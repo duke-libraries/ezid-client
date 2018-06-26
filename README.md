@@ -325,3 +325,7 @@ In order to run the integration tests successfully, you must supply the password
 3. Commit your changes (`git commit -am 'Add some feature'`)
 4. Push to the branch (`git push origin my-new-feature`)
 5. Create a new Pull Request
+
+## Acknowledgments
+
+- Justin Gondron (jgondron) contributed Datacite compatibility code (added in v1.8.0).
