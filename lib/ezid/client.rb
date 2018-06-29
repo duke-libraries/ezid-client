@@ -44,12 +44,11 @@ module Ezid
       end
     end
 
-    attr_reader :user, :password, :host, :port, :use_ssl, :timeout
+    attr_reader :user, :password, :host, :port, :timeout
 
     def initialize(opts = {})
       @host = opts[:host] || config.host
       @port = (opts[:port] || config.port).to_i
-      @use_ssl = opts[:use_ssl] || config.use_ssl
       @timeout = (opts[:timeout] || config.timeout).to_i
       @user = opts[:user] || config.user
       @password = opts[:password] || config.password
@@ -58,6 +57,12 @@ module Ezid
         yield self
         logout
       end
+    end
+
+    def use_ssl
+      warn "[DEPRECATION] `use_ssl` is deprecated and will be removed in ezid-client v2.0." \
+           " EZID requires SSL as of April 30, 2017."
+      true
     end
 
     def inspect
@@ -188,15 +193,11 @@ module Ezid
 
     private
 
-    def use_ssl?
-      use_ssl || port == 443
-    end
-
     def build_connection
-      conn = Net::HTTP.new(host, port)
-      conn.use_ssl = use_ssl?
-      conn.read_timeout = timeout
-      conn
+      Net::HTTP.new(host, port).tap do |conn|
+        conn.use_ssl = true
+        conn.read_timeout = timeout
+      end
     end
 
     def handle_response(response, request_name)

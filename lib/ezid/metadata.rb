@@ -1,4 +1,5 @@
 require "hashie"
+require_relative "metadata_transforms/datacite"
 
 module Ezid
   #
@@ -85,7 +86,12 @@ module Ezid
     end
 
     def replace(data)
-      super coerce(data)
+      hsh = coerce(data)
+
+      # Perform additional profile transforms
+      MetadataTransformDatacite.inverse(hsh) if hsh["_profile"] == "datacite"
+
+      super hsh
     end
 
     # Output metadata in EZID ANVL format
@@ -94,6 +100,10 @@ module Ezid
     def to_anvl(include_readonly = true)
       hsh = to_h
       hsh.reject! { |k, v| READONLY.include?(k) } unless include_readonly
+
+      # Perform additional profile transforms
+      MetadataTransformDatacite.transform(hsh) if profile == "datacite"
+
       lines = hsh.map do |name, value|
         element = [escape(ESCAPE_NAMES_RE, name), escape(ESCAPE_VALUES_RE, value)]
         element.join(ANVL_SEPARATOR)
