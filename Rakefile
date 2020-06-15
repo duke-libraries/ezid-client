@@ -16,7 +16,7 @@ end
 
 desc "Run the integration tests"
 RSpec::Core::RakeTask.new(:integration) do |t|
-  t.rspec_opts = "--tag integration"
+  t.rspec_opts = "--tag ezid"
 end
 
 task default: :spec
