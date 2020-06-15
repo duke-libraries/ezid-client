@@ -17,9 +17,9 @@ Gem::Specification.new do |spec|
   spec.test_files    = spec.files.grep(%r{^(test|spec|features)/})
   spec.require_paths = ["lib"]
 
-  spec.required_ruby_version = "~> 2.1"
+  spec.required_ruby_version = "~> 2.5"
 
-  spec.add_dependency "hashie", "~> 3.4", ">= 3.4.3"
+  spec.add_dependency "hashie", ">= 3.4.3"
   spec.add_dependency "nokogiri"
 
   spec.add_development_dependency "bundler"
