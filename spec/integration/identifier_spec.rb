@@ -1,5 +1,5 @@
 module Ezid
-  RSpec.describe Identifier, integration: true do
+  RSpec.describe Identifier, ezid: true do
 
     before {
       @identifier = described_class.mint(TEST_ARK_SHOULDER, target: "http://example.com")

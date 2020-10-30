@@ -5,18 +5,18 @@ desc "Run all specs in spec directory"
 RSpec::Core::RakeTask.new(:spec)
 
 desc "Run the ci build (no integration tests)"
-task :ci do
-  system "rspec . -t ~deprecated -t ~integration"
+RSpec::Core::RakeTask.new(:ci) do |t|
+  t.rspec_opts = "--tag '~deprecated' --tag '~ezid'"
 end
 
 desc "Run tests of deprecated functionality"
-task :deprecated do
-  system "rspec . -t deprecated"
+RSpec::Core::RakeTask.new(:deprecated) do |t|
+  t.rspec_opts = "--tag deprecated"
 end
 
 desc "Run the integration tests"
-task :integration do
-  system "rspec . -t integration"
+RSpec::Core::RakeTask.new(:integration) do |t|
+  t.rspec_opts = "--tag integration"
 end
 
 task default: :spec
