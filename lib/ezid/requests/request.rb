@@ -1,9 +1,10 @@
-require "delegate"
-require "uri"
-require "net/http"
-require "forwardable"
+require 'delegate'
+require 'uri'
+require 'net/http'
+require 'forwardable'
+require 'date'
 
-require_relative "../responses/response"
+require_relative '../responses/response'
 
 module Ezid
   #
@@ -31,7 +32,7 @@ module Ezid
       end
 
       def short_name
-        name.split("::").last.sub("Request", "")
+        name.split('::').last.sub('Request', '')
       end
     end
 
@@ -42,13 +43,24 @@ module Ezid
     def initialize(client, *args)
       @client = client
       super build_request
-      set_content_type("text/plain", charset: "UTF-8")
+      set_content_type('text/plain', charset: 'UTF-8')
     end
 
     # Executes the request and returns the response
     # @return [Ezid::Response] the response
     def execute
-      response_class.new(get_response_for_request)
+      retries = 0
+      begin
+        response_class.new(get_response_for_request)
+      rescue [ Net::HTTPServerException, UnexpectedResponseError ] => e
+        if retries < 2
+          sleep 15
+          retries += 1
+          retry
+        else
+          raise
+        end
+      end
     end
 
     # The request URI
@@ -91,6 +103,7 @@ module Ezid
 
     def get_response_for_request
       connection.start do |conn|
+        self['Accept'] = 'text/plain'
         add_authentication if authentication_required?
         add_metadata if has_metadata?
         conn.request(__getobj__)
@@ -113,7 +126,7 @@ module Ezid
     # Adds authentication data to the request
     def add_authentication
       if session.open?
-        self["Cookie"] = session.cookie
+        self['Cookie'] = session.cookie
       else
         basic_auth(user, password)
       end

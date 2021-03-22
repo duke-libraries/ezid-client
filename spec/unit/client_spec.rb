@@ -1,7 +1,15 @@
 module Ezid
   RSpec.describe Client do
 
+    let(:http_response) { double }
+
+    before do
+      allow(http_response).to receive(:value) { nil }
+      allow(http_response).to receive(:code) { '200' }
+    end
+
     describe "initialization without a block" do
+      let(:http_response) { double }
       it "should not login" do
         expect_any_instance_of(described_class).not_to receive(:login)
         described_class.new
@@ -151,9 +159,33 @@ EOS
     end
 
     describe "error handling" do
-      let(:http_response) { double(body: "error: bad request - no such identifier") }
-      it "should raise an exception" do
-        expect { subject.get_identifier_metadata("invalid") }.to raise_error(Error)
+      let(:stub_response) { GetIdentifierMetadataResponse.new(http_response) }
+      before do
+        allow(GetIdentifierMetadataRequest).to receive(:execute).with(subject, "invalid") { stub_response }
+      end
+
+      describe "HTTP error response" do
+        before do
+          allow(http_response).to receive(:code) { '500' }
+          allow(http_response).to receive(:message) { 'Internal Server Error' }
+        end
+        it "should raise an exception" do
+          expect { subject.get_identifier_metadata("invalid") }.to raise_error(Error)
+        end
+      end
+
+      describe "EZID API error response" do
+        let(:http_response) { double(body: "error: bad request - no such identifier") }
+        it "should raise an exception" do
+          expect { subject.get_identifier_metadata("invalid") }.to raise_error(Error)
+        end
+      end
+
+      describe "Unexpected response" do
+        let(:http_response) { double(body: "<html>\n<head><title>Ouch!</title></head>\n<body>Help!</body>\n</html>") }
+        it "should raise an exception" do
+          expect { subject.get_identifier_metadata("invalid") }.to raise_error(UnexpectedResponseError)
+        end
       end
     end
   end
