@@ -9,8 +9,8 @@ module Ezid
     end
 
     specify {
-      expect(subject.download_url).to match(/\Ahttp:\/\/ezid\.cdlib\.org\/download\/\w+\.zip\z/)
-      expect(subject.url).to match(/\Ahttp:\/\/ezid\.cdlib\.org\/download\/\w+\.zip\z/)
+      expect(subject.download_url).to match(/\Ahttps:\/\/ezid\.cdlib\.org\/download\/\w+\.zip\z/)
+      expect(subject.url).to match(/\Ahttps:\/\/ezid\.cdlib\.org\/download\/\w+\.zip\z/)
       Dir.mktmpdir do |tmpdir|
         expect(subject.file(path: tmpdir))
           .to match(/\A#{tmpdir}\/\w+\.zip\z/)

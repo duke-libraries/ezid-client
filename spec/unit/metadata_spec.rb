@@ -1,3 +1,5 @@
+require 'time'
+
 module Ezid
   RSpec.describe Metadata do
     describe "initializer" do
