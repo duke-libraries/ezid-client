@@ -14,6 +14,19 @@ module Ezid
     # Error response status
     ERROR = "error".freeze
 
+    def initialize(http_response)
+      super
+
+      unless __getobj__.code =~ /2\d\d/
+        raise Error, "HTTP response error: %s %s" %
+                     [ __getobj__.code, __getobj__.message ]
+      end
+
+      unless status_line =~ /^(#{SUCCESS}|#{ERROR}): /
+        raise UnexpectedResponseError, __getobj__.body
+      end
+    end
+
     # The response status -- "success" or "error"
     # @return [String] the status
     def status
