@@ -52,7 +52,7 @@ module Ezid
       retries = 0
       begin
         response_class.new(get_response_for_request)
-      rescue [ Net::HTTPServerException, UnexpectedResponseError ] => e
+      rescue Net::HTTPServerException, UnexpectedResponseError => e
         if retries < 2
           sleep 15
           retries += 1
