@@ -1,7 +1,7 @@
 require "time"
 
 module Ezid
-  RSpec.describe Client, integration: true do
+  RSpec.describe Client, ezid: true do
 
     shared_examples "an EZID client" do |client|
       it "should mint and modify" do

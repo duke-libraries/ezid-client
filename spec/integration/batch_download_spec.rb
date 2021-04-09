@@ -1,7 +1,7 @@
 require 'tempfile'
 
 module Ezid
-  RSpec.describe BatchDownload, integration: true do
+  RSpec.describe BatchDownload, ezid: true do
 
     subject do
       a_week_ago = (Time.now - (7*24*60*60)).to_i
@@ -9,8 +9,8 @@ module Ezid
     end
 
     specify {
-      expect(subject.download_url).to match(/\Ahttp:\/\/ezid\.cdlib\.org\/download\/\w+\.zip\z/)
-      expect(subject.url).to match(/\Ahttp:\/\/ezid\.cdlib\.org\/download\/\w+\.zip\z/)
+      expect(subject.download_url).to match(/\Ahttps:\/\/ezid\.cdlib\.org\/download\/\w+\.zip\z/)
+      expect(subject.url).to match(/\Ahttps:\/\/ezid\.cdlib\.org\/download\/\w+\.zip\z/)
       Dir.mktmpdir do |tmpdir|
         expect(subject.file(path: tmpdir))
           .to match(/\A#{tmpdir}\/\w+\.zip\z/)

@@ -8,4 +8,6 @@ module Ezid
   class NotAllowedError < Error; end
 
   class DeletionError < Error; end
+
+  class UnexpectedResponseError < Error; end
 end

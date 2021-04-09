@@ -15,6 +15,8 @@
 #
 # See http://rubydoc.info/gems/rspec-core/RSpec/Core/Configuration
 
+require "byebug"
+
 require "rspec/its"
 
 require "ezid/test_helper"
