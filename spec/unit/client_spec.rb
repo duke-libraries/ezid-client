@@ -1,15 +1,11 @@
 module Ezid
   RSpec.describe Client do
 
-    let(:http_response) { double }
-
-    before do
-      allow(http_response).to receive(:value) { nil }
-      allow(http_response).to receive(:code) { '200' }
-    end
+    let(:http_response) { double(value: value, body: body) }
+    let(:value)   { nil }
+    let(:body)    { '' }
 
     describe "initialization without a block" do
-      let(:http_response) { double }
       it "should not login" do
         expect_any_instance_of(described_class).not_to receive(:login)
         described_class.new
@@ -18,12 +14,14 @@ module Ezid
 
     describe "#create_identifier" do
       let(:id) { "ark:/99999/fk4fn19h88" }
-      let(:http_response) { double(body: "success: ark:/99999/fk4fn19h88") }
+      let(:body) { "success: ark:/99999/fk4fn19h88" }
       let(:stub_response) { CreateIdentifierResponse.new(http_response) }
+
       before do
         allow(CreateIdentifierRequest).to receive(:execute).with(subject, id, nil) { stub_response }
       end
-      it "should be a success" do
+
+      it "is a success" do
         response = subject.create_identifier(id)
         expect(response).to be_success
         expect(response.id).to eq(id)
@@ -32,19 +30,22 @@ module Ezid
 
     describe "#mint_identifier" do
       let(:stub_response) { MintIdentifierResponse.new(http_response) }
+
       before do
         allow(MintIdentifierRequest).to receive(:execute).with(subject, TEST_ARK_SHOULDER, nil) { stub_response }
       end
+
       describe "which is an ARK" do
-        let(:http_response) { double(body: "success: ark:/99999/fk4fn19h88") }
+        let(:body) { "success: ark:/99999/fk4fn19h88" }
         it "should be a success" do
           response = subject.mint_identifier(TEST_ARK_SHOULDER)
           expect(response).to be_success
           expect(response.id).to eq("ark:/99999/fk4fn19h88")
         end
       end
+
       describe "which is a DOI" do
-        let(:http_response) { double(body: "success: doi:10.5072/FK2TEST | ark:/99999/fk4fn19h88") }
+        let(:body) { "success: doi:10.5072/FK2TEST | ark:/99999/fk4fn19h88" }
         let(:metadata) do
           <<-EOS
 datacite.title: Test
@@ -54,31 +55,38 @@ datacite.publicationyear: 2014
 datacite.resourcetype: Other
 EOS
         end
+
         before do
           allow(MintIdentifierRequest).to receive(:execute).with(subject, TEST_DOI_SHOULDER, metadata) { stub_response }
         end
-        it "should be a sucess" do
+
+        it "is a success" do
           response = subject.mint_identifier(TEST_DOI_SHOULDER, metadata)
           expect(response).to be_success
           expect(response.id).to eq("doi:10.5072/FK2TEST")
           expect(response.shadow_ark).to eq("ark:/99999/fk4fn19h88")
         end
       end
+
       describe "when a shoulder is not given" do
-        let(:http_response) { double(body: "success: ark:/99999/fk4fn19h88") }
+        let(:body) { "success: ark:/99999/fk4fn19h88" }
+
         context "and the :default_shoulder config option is set" do
           before do
             allow(MintIdentifierRequest).to receive(:execute).with(subject, TEST_ARK_SHOULDER, nil) { stub_response }
             allow(Client.config).to receive(:default_shoulder) { TEST_ARK_SHOULDER }
           end
-          it "should use the default shoulder" do
+
+          it "uses the default shoulder" do
             response = subject.mint_identifier
             expect(response).to be_success
           end
         end
+
         context "and the :default_shoulder config option is not set" do
           before { allow(Client.config).to receive(:default_shoulder) { nil } }
-          it "should raise an exception" do
+
+          it "raises an exception" do
             expect { subject.mint_identifier }.to raise_error(Error)
           end
         end
@@ -87,8 +95,8 @@ EOS
 
     describe "#get_identifier_metadata" do
       let(:id) { "ark:/99999/fk4fn19h88" }
-      let(:http_response) do
-        double(body: <<-EOS
+      let(:body) do
+        <<-EOS
 success: ark:/99999/fk4fn19h88
 _updated: 1416507086
 _target: http://ezid.cdlib.org/id/ark:/99999/fk4fn19h88
@@ -99,13 +107,15 @@ _export: yes
 _created: 1416507086
 _status: public
 EOS
-                                     )
+
       end
       let(:stub_response) { GetIdentifierMetadataResponse.new(http_response) }
+
       before do
         allow(GetIdentifierMetadataRequest).to receive(:execute).with(subject, id) { stub_response }
       end
-      it "should retrieve the metadata" do
+
+      it "retrieves the metadata" do
         response = subject.get_identifier_metadata(id)
         expect(response).to be_success
         expect(response.metadata).to eq <<-EOS
@@ -123,18 +133,20 @@ EOS
 
     describe "server status" do
       let(:stub_response) { ServerStatusResponse.new(http_response) }
-      let(:http_response) do
-        double(body: <<-EOS
+      let(:body) do
+        <<-EOS
 success: EZID is up
 noid: up
 ldap: up
 EOS
-               )
+
       end
+
       before do
         allow(ServerStatusRequest).to receive(:execute).with(subject, "*") { stub_response }
       end
-      it "should report the status of EZID and subsystems" do
+
+      it "reports the status of EZID and subsystems" do
         response = subject.server_status("*")
         expect(response).to be_success
         expect(response).to be_up
@@ -147,11 +159,13 @@ EOS
 
     describe "batch download" do
       let(:stub_response) { BatchDownloadResponse.new(http_response) }
-      let(:http_response) { double(body: "success: http://ezid.cdlib.org/download/da543b91a0.xml.gz") }
+      let(:body) { "success: http://ezid.cdlib.org/download/da543b91a0.xml.gz" }
+
       before do
         allow(BatchDownloadRequest).to receive(:execute).with(subject, format: "xml") { stub_response }
       end
-      it "should return the URL to download the batch" do
+
+      it "returns the URL to download the batch" do
         response = subject.batch_download(format: "xml")
         expect(response).to be_success
         expect(response.download_url).to eq("http://ezid.cdlib.org/download/da543b91a0.xml.gz")
@@ -160,31 +174,76 @@ EOS
 
     describe "error handling" do
       let(:stub_response) { GetIdentifierMetadataResponse.new(http_response) }
+
       before do
         allow(GetIdentifierMetadataRequest).to receive(:execute).with(subject, "invalid") { stub_response }
       end
 
       describe "HTTP error response" do
         before do
-          allow(http_response).to receive(:code) { '500' }
-          allow(http_response).to receive(:message) { 'Internal Server Error' }
+          allow(http_response).to receive(:value).and_raise(Net::HTTPServerException.new('Barf!', double))
         end
-        it "should raise an exception" do
-          expect { subject.get_identifier_metadata("invalid") }.to raise_error(Error)
+
+        it "raises an exception" do
+          expect { subject.get_identifier_metadata("invalid") }.to raise_error(Net::HTTPServerException)
         end
       end
 
       describe "EZID API error response" do
-        let(:http_response) { double(body: "error: bad request - no such identifier") }
-        it "should raise an exception" do
+        let(:body) { "error: bad request - no such identifier" }
+
+        it "raises an exception" do
           expect { subject.get_identifier_metadata("invalid") }.to raise_error(Error)
         end
       end
 
-      describe "Unexpected response" do
-        let(:http_response) { double(body: "<html>\n<head><title>Ouch!</title></head>\n<body>Help!</body>\n</html>") }
-        it "should raise an exception" do
+      describe "Unexpected response (body)" do
+        let(:body) do
+          <<-EOS
+<html>
+  <head>
+    <title>Ouch!</title>
+  </head>
+  <body>
+    Help!
+  </body>
+</html>
+EOS
+
+        end
+
+        it "raises an exception" do
           expect { subject.get_identifier_metadata("invalid") }.to raise_error(UnexpectedResponseError)
+        end
+      end
+    end
+
+    describe "retrying on certain errors" do
+      before do
+        allow(GetIdentifierMetadataResponse).to receive(:new).and_raise(exception)
+      end
+
+      describe "HTTP error" do
+        let(:exception) { Net::HTTPServerException.new('Barf!', double) }
+
+        it "retries twice" do
+          begin
+            subject.get_identifier_metadata("invalid")
+          rescue Exception => _
+          end
+          expect(GetIdentifierMetadataResponse).to have_received(:new).exactly(3).times
+        end
+      end
+
+      describe "Unexpected response" do
+        let(:exception) { UnexpectedResponseError.new("HTML?!") }
+
+        it "retries twice" do
+          begin
+            subject.get_identifier_metadata("invalid")
+          rescue Exception => _
+          end
+          expect(GetIdentifierMetadataResponse).to have_received(:new).exactly(3).times
         end
       end
     end

@@ -36,6 +36,11 @@ module Ezid
     # @example "ark:/99999/fk4"
     attr_accessor :default_shoulder
 
+    # Interval in seconds to wait between
+    # retries of failed requests
+    # @see Ezid::Request#execute.
+    attr_accessor :retry_interval
+
     def initialize
       @user             = ENV["EZID_USER"]
       @password         = ENV["EZID_PASSWORD"]
@@ -43,6 +48,7 @@ module Ezid
       @port             = ENV["EZID_PORT"] || PORT
       @timeout          = ENV["EZID_TIMEOUT"] || TIMEOUT
       @default_shoulder = ENV["EZID_DEFAULT_SHOULDER"]
+      @retry_interval = ( ENV["EZID_RETRY_INTERVAL"] || 15 ).to_i
     end
 
     def inspect
