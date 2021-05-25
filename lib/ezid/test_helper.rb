@@ -19,6 +19,7 @@ module Ezid
         config.port     = ENV["EZID_TEST_PORT"] || TEST_PORT
         config.logger   = Logger.new(File::NULL)
         config.default_shoulder = ENV["EZID_TEST_SHOULDER"] || TEST_SHOULDER
+        config.retry_interval = 1
       end
     end
 

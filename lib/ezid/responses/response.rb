@@ -15,12 +15,9 @@ module Ezid
     ERROR = "error".freeze
 
     def initialize(http_response)
-      super
+      http_response.value # raises Net::HTTPServerException
 
-      unless __getobj__.code =~ /2\d\d/
-        raise Error, "HTTP response error: %s %s" %
-                     [ __getobj__.code, __getobj__.message ]
-      end
+      super
 
       unless status_line =~ /^(#{SUCCESS}|#{ERROR}): /
         raise UnexpectedResponseError, __getobj__.body
