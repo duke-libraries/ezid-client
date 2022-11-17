@@ -74,7 +74,7 @@ module Ezid
       it "should return a valid URL" do
         response = subject.batch_download(format: "anvl", createdAfter: @created, permanence: "test")
         expect(response).to be_success
-        expect(response.download_url).to match(/^http:\/\/ezid.cdlib.org\/download\/[^\/]+.gz$/)
+        expect(response.download_url).to match(/^https?:\/\/ezid.cdlib.org\/download\/[^\/]+.gz$/)
       end
     end
 
