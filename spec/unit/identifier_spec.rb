@@ -49,7 +49,7 @@ _status: public
         end
         describe "with a hash metadata arg", deprecated: true do
           it "mints a new Identifier" do
-            expect(described_class).to receive(:mint).with(nil, profile: "dc", target: "http://example.com")
+            expect(described_class).to receive(:mint).with(nil, {profile: "dc", target: "http://example.com"})
             described_class.create(profile: "dc", target: "http://example.com")
           end
         end
