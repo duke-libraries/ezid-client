@@ -1,0 +1,8 @@
+*.gem
+.bundle
+.config
+.dockerignore
+.github
+.gitignore
+Dockerfile
+Gemfile.lock
