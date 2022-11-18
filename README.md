@@ -128,20 +128,20 @@ See http://ezid.cdlib.org/doc/apidoc.html#parameters. Repeated values should be 
 ```
 >> batch_download = Ezid::BatchDownload.new(:csv)
  => #<Ezid::BatchDownload format=:csv>
- 
+
 >> batch_download.column = ["_id", "_target"]
  => ["_id", "_target"]
- 
+
 >> batch_download.createdAfter = Date.today.to_time
  => 2016-02-24 00:00:00 -0500
- 
+
 >> batch_download
  => #<Ezid::BatchDownload column=["_id", "_target"] createdAfter=1456290000 format=:csv>
- 
+
 >> batch_download.url
 I, [2016-02-24T18:03:40.828005 #1084]  INFO -- : EZID BatchDownload -- success: http://ezid.cdlib.org/download/4a63401e17.csv.gz
  => "http://ezid.cdlib.org/download/4a63401e17.csv.gz"
- 
+
 >> batch_download.file
  => /current/working/directory/4a63401e17.csv.gz
  ```
@@ -155,13 +155,13 @@ I, [2016-02-24T18:03:40.828005 #1084]  INFO -- : EZID BatchDownload -- success: 
 ```
 >> require 'ezid/batch'
  => true
- 
+
 >> batch = Ezid::Batch.new(:anvl, "spec/fixtures/anvl_batch.txt")
  => #<Ezid::Batch:0x007f87a8900308 @format=:anvl, @batch_file="spec/fixtures/anvl_batch.txt">
- 
+
 >> id = batch.first
  => #<Ezid::Identifier id=ark:/99999/fk4086hs23>
- 
+
 >> id.target
  => "http://example.com"
 
@@ -317,6 +317,15 @@ See also https://github.com/duke-libraries/ezid-client/wiki/Mock-Identifier for 
 See http://ezid.cdlib.org/doc/apidoc.html#testing-the-api.
 
 In order to run the integration tests successfully, you must supply the password for the test account "apitest" (contact EZID).  To run the test suite without the integration tests, use the `rake ci` task.
+
+## Dockerfile
+
+A basic Dockerfile is provided based on Docker official Ruby image tags.
+
+An example building an image with the latest Ruby and running the unit tests:
+
+    $ docker build -t ezid-client .
+    $ docker run --rm -it ezid-client bundle exec rspec ./spec/unit/
 
 ## Contributing
 
