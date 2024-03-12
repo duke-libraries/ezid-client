@@ -15,8 +15,6 @@ module Ezid
     ERROR = "error".freeze
 
     def initialize(http_response)
-      http_response.value # raises Net::HTTPServerException
-
       super
 
       unless status_line =~ /^(#{SUCCESS}|#{ERROR}): /

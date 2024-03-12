@@ -22,6 +22,8 @@ module Ezid
     POST = Net::HTTP::Post
     DELETE = Net::HTTP::Delete
 
+    RETRIABLE_SERVER_ERRORS = %w[500 502 503 504].freeze
+
     class << self
       attr_accessor :http_method, :path, :response_class
 
@@ -51,8 +53,14 @@ module Ezid
     def execute
       retries = 0
       begin
-        response_class.new(get_response_for_request)
-      rescue Net::HTTPServerException, UnexpectedResponseError => e
+        http_response = get_response_for_request
+
+        if RETRIABLE_SERVER_ERRORS.include? http_response.code
+          raise ServerError, "#{http_response.code} #{http_response.msg}"
+        end
+
+        response_class.new(http_response)
+      rescue ServerError, UnexpectedResponseError => e
         if retries < 2
           sleep client.config.retry_interval
           retries += 1

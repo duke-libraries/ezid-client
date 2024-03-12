@@ -4,10 +4,10 @@ FROM ruby:${ruby_version}
 
 SHELL ["/bin/bash", "-c"]
 
-RUN gem install bundler -v '~>2.0'
-
 WORKDIR /app
 
-COPY . .
+COPY VERSION Gemfile ezid-client.gemspec ./
 
-RUN bundle install
+RUN gem install bundler -v '~>2.0' && bundle install
+
+COPY . .

@@ -179,16 +179,6 @@ EOS
         allow(GetIdentifierMetadataRequest).to receive(:execute).with(subject, "invalid") { stub_response }
       end
 
-      describe "HTTP error response" do
-        before do
-          allow(http_response).to receive(:value).and_raise(Net::HTTPServerException.new('Barf!', double))
-        end
-
-        it "raises an exception" do
-          expect { subject.get_identifier_metadata("invalid") }.to raise_error(Net::HTTPServerException)
-        end
-      end
-
       describe "EZID API error response" do
         let(:body) { "error: bad request - no such identifier" }
 
@@ -223,8 +213,8 @@ EOS
         allow(GetIdentifierMetadataResponse).to receive(:new).and_raise(exception)
       end
 
-      describe "HTTP error" do
-        let(:exception) { Net::HTTPServerException.new('Barf!', double) }
+      describe "retriable server error" do
+        let(:exception) { ServerError.new('502 Bad Gateway') }
 
         it "retries twice" do
           begin
