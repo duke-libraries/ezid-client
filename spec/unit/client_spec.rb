@@ -210,6 +210,7 @@ EOS
 
     describe "retrying on certain errors" do
       before do
+        allow(subject.config).to receive(:retry_interval) { 1 }
         allow(GetIdentifierMetadataResponse).to receive(:new).and_raise(exception)
       end
 

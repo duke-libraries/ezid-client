@@ -39,7 +39,7 @@ module Ezid
     end
 
     attr_reader :client
-    def_delegators :client, :connection, :user, :password, :session
+    def_delegators :client, :connection, :user, :password, :session, :logger
 
     # @param client [Ezid::Client] the client
     def initialize(client, *args)
@@ -52,6 +52,7 @@ module Ezid
     # @return [Ezid::Response] the response
     def execute
       retries = 0
+
       begin
         http_response = get_response_for_request
 
@@ -60,10 +61,14 @@ module Ezid
         end
 
         response_class.new(http_response)
+
       rescue ServerError, UnexpectedResponseError => e
         if retries < 2
+          logger.error "EZID error: #{e}"
+
           sleep client.config.retry_interval
           retries += 1
+
           retry
         else
           raise
