@@ -10,4 +10,6 @@ module Ezid
   class DeletionError < Error; end
 
   class UnexpectedResponseError < Error; end
+
+  class ServerError < Error; end
 end

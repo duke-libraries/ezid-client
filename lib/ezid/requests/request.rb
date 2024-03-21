@@ -22,6 +22,10 @@ module Ezid
     POST = Net::HTTP::Post
     DELETE = Net::HTTP::Delete
 
+    RETRIABLE_SERVER_ERRORS = %w[500 502 503 504].freeze
+
+    RETRIES = ENV.fetch('EZID_REQUEST_RETRIES', '2').to_i
+
     class << self
       attr_accessor :http_method, :path, :response_class
 
@@ -37,7 +41,7 @@ module Ezid
     end
 
     attr_reader :client
-    def_delegators :client, :connection, :user, :password, :session
+    def_delegators :client, :connection, :user, :password, :session, :logger, :config
 
     # @param client [Ezid::Client] the client
     def initialize(client, *args)
@@ -50,12 +54,24 @@ module Ezid
     # @return [Ezid::Response] the response
     def execute
       retries = 0
+
       begin
-        response_class.new(get_response_for_request)
-      rescue Net::HTTPServerException, UnexpectedResponseError => e
-        if retries < 2
-          sleep client.config.retry_interval
+        http_response = get_response_for_request
+
+        if RETRIABLE_SERVER_ERRORS.include? http_response.code
+          raise ServerError, "#{http_response.code} #{http_response.msg}"
+        end
+
+        response_class.new(http_response)
+
+      rescue ServerError, UnexpectedResponseError => e
+        if retries < RETRIES
+          logger.error "EZID error: #{e}"
+
           retries += 1
+          logger.info "Retry (#{retries} of #{RETRIES}) of #{short_name} #{path} in #{config.retry_interval} seconds ..."
+          sleep config.retry_interval
+
           retry
         else
           raise
@@ -84,6 +100,10 @@ module Ezid
     # HTTP request query string
     # @return [String] the query string
     def query; end
+
+    def short_name
+      self.class.short_name
+    end
 
     def authentication_required?
       true
