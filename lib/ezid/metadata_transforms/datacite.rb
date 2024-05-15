@@ -10,7 +10,7 @@ module Ezid
       resource_opts = {
         "xmlns:xsi" => "http://www.w3.org/2001/XMLSchema-instance",
         "xmlns" => "http://datacite.org/schema/kernel-4",
-        "xsi:schemaLocation" => "http://datacite.org/schema/kernel-4 http://schema.datacite.org/meta/kernel-4/metadata.xsd"
+        "xsi:schemaLocation" => "http://datacite.org/schema/kernel-4 http://schema.datacite.org/meta/kernel-4.5/metadata.xsd"
       }
       xml_builder = Nokogiri::XML::Builder.new(encoding: "UTF-8") { |builder|
         builder.resource(resource_opts) {
