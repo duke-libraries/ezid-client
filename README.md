@@ -337,5 +337,5 @@ An example building an image with the latest Ruby and running the unit tests:
 
 ## Acknowledgments
 
-- Justin Gondron (jgondron) contributed Datacite compatibility code (added in v1.8.0).
-- Simon Choy (simonmchoy) update the Datacite schema to version 4.5 (v1.11.0).
+- Justin Gondron (@jgondron) contributed Datacite compatibility code (added in v1.8.0).
+- Simon Choy (@simonmchoy) updated the Datacite schema to version 4.5 (v1.11.0).
